@@ -9,7 +9,7 @@ import shutil
 
 NACA_type = '4412'
 
-geometry_file = "SP2_geom" # "VP1304_geom" , "SP2_geom"
+geometry_file = "VP1304_geom" # "VP1304_geom" , "SP2_geom"
 
 bluntTrailingEdge = True
 optimisedGridSpacing = True
@@ -216,7 +216,7 @@ gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is sel
 
 gmsh.write(geometry_file+"_NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.msh")
 
-gmsh.write(geometry_file+"_NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.vtk")
+# gmsh.write(geometry_file+"_NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.vtk")
 
 # delete the "__pycache__" folder:
 try:
