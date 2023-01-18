@@ -1,0 +1,232 @@
+# Copyright (c) 2022 Étienne Spieser (Tiānài), member of AANTC (https://aantc.ust.hk/)
+# available under MIT licence at: https://github.com/etiennespieser  
+# ------------------------------------------------------------------------------------
+
+import sys
+import gmsh
+from gmshToolkit import *
+import shutil 
+
+NACA_type = '4412'
+
+geometry_file = "SP2_geom" # "VP1304_geom" , "SP2_geom"
+
+bluntTrailingEdge = True
+optimisedGridSpacing = True
+
+gridPts_alongNACA = 10
+
+gridPts_inBL = 3 # > 2 for split into fully hex mesh
+gridGeomProg_inBL = 1.1
+
+TEpatchGridFlaringAngle = 0 # deg
+gridPts_alongTEpatch = 5 # > 2 for split into fully hex mesh
+gridGeomProg_alongTEpatch = 1.05
+
+wakeGridFlaringAngle = 0 # deg
+gridPts_alongWake = 3 # > 2 for split into fully hex mesh
+gridGeomProg_alongWake = 1.0
+
+[radii_vec, chord_vec, pitch_vecAngle, rake_vec, skew_vecAngle] = read_geometry(geometry_file+".dat")
+
+skew_vec = np.sin(skew_vecAngle*np.pi/180)*radii_vec
+# "SP2_geom.dat" considers the total rake. rake_vec = generatorRake_vec + skew_vec*np.tan(pitch_vecAngle*np.pi/180)
+
+# # conversion from (m) to (mm)
+# radii_vec = 1000*radii_vec
+# chord_vec = 1000*chord_vec
+# rake_vec = 1000*rake_vec
+# skew_vec = 1000*skew_vec
+
+airfoilReferenceCoordinate = np.array([skew_vec, -rake_vec, -radii_vec]).transpose()
+
+# for dummy geom, uncomment below:
+# radii_vec = [0.1, 0.3]
+
+
+radii_step = [1] * len(radii_vec) # number of radial elements between to radial slices. 
+
+airfoilReferenceAlongChord_c = 0.5
+TEpatchLength_c = 0.1 # length of the TEpatch in along the x-axis
+wakeLength_c = 0.3 # length of the wake in along the x-axis
+height_LE_c = 0.05 # Structured Grid offset layer gap at the leading edge
+height_TE_c = 0.1 # Structured Grid offset layer gap at the trailing edge
+gridPts_inTE = int(gridPts_inBL/4) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
+airfoilReferenceAlongChord_c = 0.5
+
+
+# Initialize gmsh:
+gmsh.initialize()
+
+pTS1 = [] # pointTag_struct -- blade 1
+lTS1 = [] # lineTag_struct -- blade 1
+sTS1 = [] # surfaceTag_struct -- blade 1
+
+pTS2 = [] # pointTag_struct -- blade 2
+lTS2 = [] # lineTag_struct -- blade 2
+sTS2 = [] # surfaceTag_struct -- blade 2
+
+pointTag = 0
+lineTag = 0
+surfaceTag = 0
+volumeTag = 0
+
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+# # Creation of the propeller mesh # #
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+
+# Creation of blade number 1 ***   ***   ***
+rotMat = rotationMatrix([0.0, 0.0, 0.0]) # angles in degree
+
+for i in range(len(radii_vec)):
+
+    structTag = [pointTag, lineTag, surfaceTag]
+    GeomSpec = [NACA_type, bluntTrailingEdge, optimisedGridSpacing, pitch_vecAngle[i], chord_vec[i], airfoilReferenceAlongChord_c*chord_vec[i], airfoilReferenceCoordinate[i], height_LE_c*chord_vec[i], height_TE_c*chord_vec[i], TEpatchLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), TEpatchGridFlaringAngle, wakeLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), wakeGridFlaringAngle]
+    GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
+
+    [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat)
+    
+    pTS1.append(pointTag_list)
+    lTS1.append(lineTag_list)
+    sTS1.append(surfaceTag_list)
+
+
+[tlTS1, lineTag] = gmeshed_blade_tl(pTS1, gridPts_alongNACA, radii_step, bluntTrailingEdge, lineTag)
+
+[tsTS1, surfaceTag] = gmeshed_blade_ts(lTS1, tlTS1, gridPts_alongNACA, radii_step, bluntTrailingEdge, surfaceTag)
+
+[sStructGridSkin1, sairfoilSkin1] = returnStructGridOuterShell(sTS1, tsTS1, radii_step, bluntTrailingEdge)
+
+
+# # Creation of blade number 2 ***   ***   ***
+rotMat = rotationMatrix([180.0, 0.0, 180.0]) # angles in degree
+
+for i in range(len(radii_vec)):
+
+    structTag = [pointTag, lineTag, surfaceTag]
+    GeomSpec = [NACA_type, bluntTrailingEdge, optimisedGridSpacing, pitch_vecAngle[i], chord_vec[i], airfoilReferenceAlongChord_c*chord_vec[i], airfoilReferenceCoordinate[i], height_LE_c*chord_vec[i], height_TE_c*chord_vec[i], TEpatchLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), TEpatchGridFlaringAngle, wakeLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), wakeGridFlaringAngle]
+    GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
+
+    [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat)
+    
+    pTS2.append(pointTag_list)
+    lTS2.append(lineTag_list)
+    sTS2.append(surfaceTag_list)
+
+[tlTS2, lineTag] = gmeshed_blade_tl(pTS2, gridPts_alongNACA, radii_step, bluntTrailingEdge, lineTag)
+
+[tsTS2, surfaceTag] = gmeshed_blade_ts(lTS2, tlTS2, gridPts_alongNACA, radii_step, bluntTrailingEdge, surfaceTag)
+
+[sStructGridSkin2, sairfoilSkin2] = returnStructGridOuterShell(sTS2, tsTS2, radii_step, bluntTrailingEdge)
+
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+# # Creation of the transfinite blade volumes # #
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+[vTS1, volumeTag] = gmeshed_blade_vol(sTS1, tsTS1, gridPts_alongNACA, radii_step, bluntTrailingEdge, volumeTag)
+[vTS2, volumeTag] = gmeshed_blade_vol(sTS2, tsTS2, gridPts_alongNACA, radii_step, bluntTrailingEdge, volumeTag)
+
+vol_blade_1 = returnStructGridVol(vTS1, bluntTrailingEdge)
+vol_blade_2 = returnStructGridVol(vTS2, bluntTrailingEdge)
+
+
+
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+# # Creation of the cylindrical volumes # #
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+y_max_cyl1 = 0.05
+y_min_cyl1 = -0.1
+r_cyl1 = 0.15
+elemSize_cyl1 = 0.01 #  0.001
+
+y_max_cyl2 = 0.075
+y_min_cyl2 = -0.15
+r_cyl2 = 0.2
+elemSize_cyl2 = 0.01 # 0.002
+
+[ cylSurf1, pointTag, lineTag, surfaceTag] = gmeshed_cylinder_surf(y_min_cyl1, y_max_cyl1, r_cyl1, elemSize_cyl1, pointTag, lineTag, surfaceTag)
+[ cylSurf2, pointTag, lineTag, surfaceTag] = gmeshed_cylinder_surf(y_min_cyl2, y_max_cyl2, r_cyl2, elemSize_cyl2, pointTag, lineTag, surfaceTag)
+
+gmsh.model.geo.addSurfaceLoop([*sStructGridSkin1, *sStructGridSkin2, *cylSurf1], volumeTag+1)
+gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
+gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
+volumeTag = volumeTag+1
+vol_unstrucCFD = volumeTag
+
+gmsh.model.geo.addSurfaceLoop([*cylSurf1, *cylSurf2], volumeTag+1)
+gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
+gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
+volumeTag = volumeTag+1
+vol_unstrucBUFF = volumeTag
+
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+# # Generate visualise and export the mesh # #
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+# https://gmsh.info/doc/texinfo/gmsh.html#Mesh-options
+
+gmsh.model.geo.synchronize()
+
+# 2D pavement
+# gmsh.option.setNumber("Mesh.Smoothing", 3)
+# gmsh.option.setNumber("Mesh.Algorithm", 11) # mesh 2D
+# gmsh.option.setNumber("Mesh.RecombineAll", 1)
+# gmsh.model.mesh.generate(2)
+
+# generating a high quality fully hex mesh is a tall order: 
+# https://gitlab.onelab.info/gmsh/gmsh/-/issues/784
+
+# gmsh.option.setNumber('Mesh.Recombine3DLevel', 0)
+# gmsh.option.setNumber("Mesh.NbTetrahedra", 0)
+# gmsh.option.setNumber("Mesh.Algorithm3D", 4) # mesh 3D
+
+gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", 2) # most robust way to obtain pure hex mesh: subdivise it
+# gmsh.option.setNumber('Mesh.RecombinationAlgorithm', 3) # perhaps better but conflict with transfinite mesh... to dig further
+
+gmsh.model.mesh.generate()
+
+# gmsh.model.mesh.recombine()
+# gmsh.model.mesh.refine()
+
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+# # Creation of the physical group # #
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+# Create the relevant Gmsh data structures from Gmsh model.
+gmsh.model.geo.synchronize()
+
+GMSHvolumeTag = 0
+for volBeat in [*vol_blade_1, *vol_blade_2]:
+    GMSHvolumeTag = GMSHvolumeTag + 1
+    gmsh.model.addPhysicalGroup(pb_3Dim, volBeat, GMSHvolumeTag, "Struct Grid volume 1") # physical volume
+
+gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucCFD], GMSHvolumeTag+1, "BL volume") # physical volume
+gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucBUFF], GMSHvolumeTag+2, "BL volume") # physical volume
+
+# gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin1], 11, "BL volume") # physical surface
+# gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin2], 12, "BL volume") # physical surface
+
+
+[nodePerEntity, elemPerEntity] = countDOF()
+
+# Write mesh data:
+gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is selected "Mesh.SaveAll=1" discards the group definitions (to be avoided!).
+
+gmsh.write(geometry_file+"_NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.msh")
+
+gmsh.write(geometry_file+"_NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.vtk")
+
+# delete the "__pycache__" folder:
+try:
+    shutil.rmtree("__pycache__")
+except OSError as e:
+    print("Error: %s - %s." % (e.filename, e.strerror))
+
+# Creates  graphical user interface
+if 'close' not in sys.argv:
+    gmsh.fltk.run()
+
+# It finalize the Gmsh API
+gmsh.finalize()
