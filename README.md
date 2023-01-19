@@ -10,4 +10,7 @@ These scripts run with python 3 and assume gmsh-api is installed, e.g. using,
 pip install gmsh
 ```
 
-Bug tracking and sugestions are welcome. For general documentation, refer to: https://gmsh.info/doc/texinfo/gmsh.html
+Bug tracking and sugestions are welcome.
+For general documentation, refer to: 
+   + https://gmsh.info/doc/texinfo/gmsh.html
+   + https://bthierry.pages.math.cnrs.fr/tutorial/gmsh/

@@ -135,8 +135,6 @@ gmsh.model.mesh.generate(2)
 # Create the relevant Gmsh data structures from Gmsh model.
 gmsh.model.geo.synchronize()
 
-print([structGridSurf, surf_unstr])
-
 gmsh.model.addPhysicalGroup(pb_2Dim, [*structGridSurf, surf_unstr], 1, "CFD") # physical surface
 gmsh.model.addPhysicalGroup(pb_2Dim, [surf_unstrBUFF], 2, "Buff") # physical surface
 

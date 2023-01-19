@@ -14,6 +14,8 @@
 # https://gmsh.info/doc/texinfo/gmsh.html
 # meshing with S.A.E. Miller, "Tutorial on Computational Grid Generation for CFD using GMSH"
 # https://youtube.com/playlist?list=PLbiOzt50Bx-l2QyX5ZBv9pgDtIei-CYs_
+# or tutorial of Bertrand Thierry:
+# https://bthierry.pages.math.cnrs.fr/tutorial/gmsh/ 
 
 
 # >> Blocking close to the airfoil (inside the <<regular CAA>> block) <<  
@@ -491,6 +493,12 @@ def gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat):
     
     gmsh.model.geo.add_curve_loop( airfoil_boundaries, surfaceTag+1) 
     gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
+    if bluntTrailingEdge:
+        if (gridPts_alongNACA <= gridPts_inTE):
+            print("Warning. A struct mesh cannot be created with this ration of points in the blunt TE and along the airfoil. Choose gridPts_alongNACA/gridPts_inTE > 1")
+        gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1, "LeftRight", [point_TEl, point_TEu, point_LE-gridPts_inTE+2, point_LE+gridPts_inTE-2])
+    else:
+        gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1, "LeftRight", [point_TE, point_TE+int(gridPts_alongNACA/2), point_LE, point_LE+int(gridPts_alongNACA/2)])
     gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
     surfaceTag = surfaceTag+1
     surf_airfoil = surfaceTag
