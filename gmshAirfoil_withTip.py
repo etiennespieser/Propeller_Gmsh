@@ -9,10 +9,10 @@ import shutil
 
 NACA_type = '0012'
 
-bluntTrailingEdge = False
+bluntTrailingEdge = True
 optimisedGridSpacing = True
 
-gridPts_alongNACA = 30
+gridPts_alongNACA = 10
 
 gridPts_inBL = 4 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
@@ -138,7 +138,7 @@ lBer = 27
 
 # convention for the tip line directions. From the side to the tip !!
 
-gridPts_tipSide = 10
+gridPts_tipSide = 3
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # creation of the lines # #
@@ -153,14 +153,16 @@ lineTag = lineTag+1
 line_tipConnectionToLeft = lineTag
 
 if ~bluntTrailingEdge:
-    gmsh.model.geo.add_line(pTL_slice[pTE], pTL_tip[pTEu]+1, lineTag+1)
+    gmsh.model.geo.add_line(pTL_slice[pTE], pTL_tip[pTE]+1, lineTag+1)
     lineTag = lineTag+1
     line_tipConnectionToTE = lineTag
 
-# creating the oblique lines
+### creating the oblique lines ###
+# airfoil skin
 line_TEuTipU = lineTag+1
 for i in range(gridPts_alongNACA-1):
-    gmsh.model.geo.add_line(pTL_slice[pTEu]+i, pTL_tip[pTEu]+i, lineTag+1)
+    if not(bluntTrailingEdge is False and i==0): # to avoid creating a 0 distance line when TE is sharp
+        gmsh.model.geo.add_line(pTL_slice[pTEu]+i, pTL_tip[pTEu]+i, lineTag+1) 
     lineTag = lineTag+1
 line_LEtipU = lineTag
 line_LEtipL = lineTag+1
@@ -169,6 +171,7 @@ for i in range(gridPts_alongNACA-1):
     lineTag = lineTag+1
 line_TElTipL = lineTag
 
+# BL skin
 line_upTipU = lineTag+1
 for i in range(gridPts_alongNACA-1):
     gmsh.model.geo.add_line(pTL_slice[pup]+i, pTL_tip[pup]+i, lineTag+1)
@@ -213,7 +216,7 @@ gmsh.model.geo.mesh.setTransfiniteCurve(line_tipConnectionToLE, 2)
 gmsh.model.geo.mesh.setTransfiniteCurve(line_tipConnectionToLeft, 2)
 gmsh.model.geo.mesh.setTransfiniteCurve(line_tipConnectionToTE, 2)
 
-# connecting together the skeleton of the new generting airfoil and the last propeller slice
+# connecting together the new generting airfoil skeleton to the last propeller slice
 # LE:
 gmsh.model.geo.add_curve_loop([-line_tipConnectionToLE, -lTL_slice[lG], line_tipConnectionToLeft, (lTL_tip[lG]-1)], surfaceTag+1)
 gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1)
@@ -224,8 +227,10 @@ surf_tipLEconnectionStructGridUp = surfaceTag
 # TE:
 print("here TE connection pannel to be coded..")
 
+
+### airfoil skin ###
 # airfoil tipSkin uper side
-BLstructStartSurfTag_tipU = surfaceTag+1
+airfoilStructStartSurfTag_tipU = surfaceTag+1
 if bluntTrailingEdge:
     gmsh.model.geo.add_curve_loop([lTL_tip[lairfoilUp][0], line_TEuTipU, -lTL_slice[lairfoilUp][0], -(line_TEuTipU+1)], surfaceTag+1)
     gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1)
@@ -250,13 +255,10 @@ gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1)
 gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
 gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
 surfaceTag = surfaceTag+1
-BLstructEndSurfTag_tipU = surfaceTag
+airfoilStructEndSurfTag_tipU = surfaceTag
 
 # airfoil tipSkin lower side
-
-# print([line_LEtipL, line_tipConnectionToLE, lTL_slice[lairfoilLow][0]])
-
-BLstructStartSurfTag_tipL = surfaceTag+1
+airfoilStructStartSurfTag_tipL = surfaceTag+1
 gmsh.model.geo.add_curve_loop([-line_tipConnectionToLE, -lTL_slice[lairfoilLow][0], -line_LEtipL], surfaceTag+1)
 gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1)
 gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
@@ -268,7 +270,6 @@ for i in range(1,gridPts_alongNACA-2):
     gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
     gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
     surfaceTag = surfaceTag+1
-
 if bluntTrailingEdge:
     gmsh.model.geo.add_curve_loop([lTL_tip[lairfoilUp][-gridPts_alongNACA+1], -(line_LEtipL+gridPts_alongNACA-3), lTL_slice[lairfoilLow][gridPts_alongNACA-2], (line_LEtipL+gridPts_alongNACA-2)], surfaceTag+1)
     gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1)
@@ -281,15 +282,38 @@ else:
     gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
     gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
     surfaceTag = surfaceTag+1
-    
+airfoilStructEndSurfTag_tipL = surfaceTag
 
+### BL skin ###
+# airfoil tipSkin uper side
+BLstructStartSurfTag_tipU = surfaceTag+1
+for i in range(gridPts_alongNACA-2):
+    gmsh.model.geo.add_curve_loop([line_upTipU+i, lTL_tip[lBLup][i], -(line_upTipU+1+i), -lTL_slice[lBLup][i]], surfaceTag+1)
+    gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1
+# handling the two triangular surfaces appearing at the LE   
+gmsh.model.geo.add_curve_loop([lTL_slice[lBLup][gridPts_alongNACA-2], -line_leftTipU, -line_tipConnectionToLeft], surfaceTag+1)
+gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1)
+gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+surfaceTag = surfaceTag+1
+BLstructEndSurfTag_tipU = surfaceTag
+gmsh.model.geo.add_curve_loop([lTL_slice[lBLlow][0], line_leftTipL, line_tipConnectionToLeft], surfaceTag+1)
+gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1)
+gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+surfaceTag = surfaceTag+1
+BLstructStartSurfTag_tipL = surfaceTag
+# airfoil tipSkin lower side
+for i in range(1,gridPts_alongNACA-1):
+    gmsh.model.geo.add_curve_loop([line_leftTipL+i-1, -lTL_tip[lBLup][-i-1], -(line_leftTipL+i), -lTL_slice[lBLlow][i]], surfaceTag+1)
+    gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1
 BLstructEndSurfTag_tipL = surfaceTag
-
-
-
-
-
-
 
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
