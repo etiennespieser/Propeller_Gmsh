@@ -16,9 +16,9 @@ NACA_type = '0012'
 bluntTrailingEdge = False
 optimisedGridSpacing = True
 
-gridPts_alongNACA = 100
+gridPts_alongNACA = 10
 
-gridPts_inBL = 20 # > 2 for split into fully hex mesh
+gridPts_inBL = 5 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
 TEpatchGridFlaringAngle = 10 # deg
@@ -83,7 +83,7 @@ structGridSurf = returnStructGridSide(sTL_slice, bluntTrailingEdge)
 rotMat = rotationMatrix([-pitch, -pitch, 90.0]) # angles in degree
 
 structTag = [pointTag, lineTag, surfaceTag]
-GeomSpec = ['3312', bluntTrailingEdge, optimisedGridSpacing, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
+GeomSpec = ['0012', bluntTrailingEdge, optimisedGridSpacing, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
 GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
 [pTL_tip, lTL_tip, sTL_tip, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat)
 
@@ -194,7 +194,7 @@ line_LEtipL = lineTag+1
 for i in range(gridPts_alongNACA-1):
     gmsh.model.geo.add_line(pTL_slice[pLE]+1+i, pTL_tip[pLE]-1-i, lineTag+1)
     lineTag = lineTag+1
-line_TElTipL = lineTag
+line_TEuTipL = lineTag
 
 # BL skin
 line_upTipU = lineTag+1
@@ -206,7 +206,7 @@ line_leftTipL = lineTag+1
 for i in range(gridPts_alongNACA-1):
     gmsh.model.geo.add_line(pTL_slice[pleft]+1+i, pTL_tip[pleft]-1-i, lineTag+1)
     lineTag = lineTag+1
-line_lowTipL = lineTag
+line_upTipL = lineTag
 
 gmsh.model.geo.add_line(pTL_slice[pupRight], pTL_tip[pupRight], lineTag+1)
 lineTag = lineTag+1
@@ -224,6 +224,13 @@ if bluntTrailingEdge:
     lineTag = lineTag+1
     line_upMidRightTipL = lineTag
 
+    gmsh.model.geo.add_line(pTL_slice[pTE], pTL_tip[pTEu], lineTag+1)
+    lineTag = lineTag+1
+    line_TEuTipM = lineTag
+
+    gmsh.model.geo.add_line(pTL_slice[pTEwake], pTL_tip[pupMidRight], lineTag+1)
+    lineTag = lineTag+1
+    line_upMidRightTipM = lineTag
 
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -244,12 +251,13 @@ gmsh.model.geo.mesh.setTransfiniteCurve(line_tipConnectionToLeft, 2)
 if bluntTrailingEdge:
     gmsh.model.geo.mesh.setTransfiniteCurve(line_upMidRightTipU, gridPts_tipSide)
     gmsh.model.geo.mesh.setTransfiniteCurve(line_upMidRightTipL, gridPts_tipSide)
+    gmsh.model.geo.mesh.setTransfiniteCurve(line_TEuTipM, gridPts_inTE)
+    gmsh.model.geo.mesh.setTransfiniteCurve(line_upMidRightTipM, gridPts_inTE)
+
 else:
     gmsh.model.geo.mesh.setTransfiniteCurve(line_tipConnectionToTEalongAirfoil, 2)
     gmsh.model.geo.mesh.setTransfiniteCurve(line_tipConnectionToUp, gridPts_inBL, "Progression", gridGeomProg_inBL)
     gmsh.model.geo.mesh.setTransfiniteCurve(line_tipConnectionToUpRight, gridPts_inBL)
-
-
 
 # connecting together the new generting airfoil skeleton to the last propeller slice
 # LE:
@@ -260,7 +268,14 @@ gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles 
 surfaceTag = surfaceTag+1
 surf_tipLEconnectionStructGridUp = surfaceTag
 # TE:
-if not bluntTrailingEdge:
+if bluntTrailingEdge:
+    gmsh.model.geo.add_curve_loop([line_TEuTipM, lTL_tip[lM], -line_upMidRightTipM, -lTL_slice[lK]], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1
+    surf_tipTEconnectionTEpatchMidUp = surfaceTag
+else:
     gmsh.model.geo.add_curve_loop([line_tipConnectionToTEalongAirfoil, lTL_tip[lBLrad][1], -lTL_tip[lBLup][0], -line_tipConnectionToUp], surfaceTag+1)
     gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
     gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
@@ -347,12 +362,12 @@ gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
 gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
 surfaceTag = surfaceTag+1
 BLstructEndSurfTag_tipU = surfaceTag
+BLstructStartSurfTag_tipL = surfaceTag +1
 gmsh.model.geo.add_curve_loop([lTL_slice[lBLlow][0], line_leftTipL, line_tipConnectionToLeft], surfaceTag+1)
 gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
 gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
 gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
 surfaceTag = surfaceTag+1
-BLstructStartSurfTag_tipL = surfaceTag
 # airfoil tipSkin lower side
 for i in range(1,gridPts_alongNACA-1):
     gmsh.model.geo.add_curve_loop([line_leftTipL+i-1, -lTL_tip[lBLup][-i-1], -(line_leftTipL+i), -lTL_slice[lBLlow][i]], surfaceTag+1)
@@ -368,8 +383,29 @@ gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
 gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
 gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
 surfaceTag = surfaceTag+1
+lDsurf_tipU = surfaceTag
 
+gmsh.model.geo.add_curve_loop([lTL_slice[lC], line_upRightTipL, lTL_tip[lD], -line_upTipL], surfaceTag+1)
+gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+surfaceTag = surfaceTag+1
+lDsurf_tipL = surfaceTag
 
+if bluntTrailingEdge:
+    gmsh.model.geo.add_curve_loop([line_TEuTipU, lTL_tip[lM], -line_upMidRightTipU, -lTL_slice[lM]], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1
+    lMsurf_tipU = surfaceTag
+
+    gmsh.model.geo.add_curve_loop([line_TEuTipL, lTL_tip[lM], -line_upMidRightTipL, -lTL_slice[lL]], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1
+    lMsurf_tipL = surfaceTag
 
 ### Generating transverse surfaces ###
 BLstructStartTransverseSurfTag_tipU = surfaceTag+1
@@ -406,7 +442,7 @@ if bluntTrailingEdge:
     gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
     surfaceTag = surfaceTag+1
 else:
-    gmsh.model.geo.add_curve_loop([line_tipConnectionToUp, -line_lowTipL, -lTL_slice[lBLrad][-1]], surfaceTag+1)
+    gmsh.model.geo.add_curve_loop([line_tipConnectionToUp, -line_upTipL, -lTL_slice[lBLrad][-1]], surfaceTag+1)
     gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
     gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
     gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
@@ -414,13 +450,65 @@ else:
 BLstructEndTransverseSurfTag_tipL = surfaceTag
 
 ### TE patch ###
+if bluntTrailingEdge:
+    # TE patch Mid Up
+    gmsh.model.geo.add_curve_loop([-line_TEuTipM, lTL_slice[lEu], line_TEuTipU], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1
+    surf_tipTEtransverseConnectionU = surfaceTag
+    gmsh.model.geo.add_curve_loop([-line_TEuTipM, -lTL_slice[lEl], line_TEuTipL], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1
+    surf_tipTEtransverseConnectionL = surfaceTag
+    gmsh.model.geo.add_curve_loop([-line_upMidRightTipM, lTL_slice[lFu], line_upMidRightTipU], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1
+    surf_tipTEwakeTransverseConnectionU = surfaceTag
+    gmsh.model.geo.add_curve_loop([-line_upMidRightTipM, -lTL_slice[lFl], line_upMidRightTipL], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1
+    surf_tipTEwakeTransverseConnectionL = surfaceTag
 
-
-
+    # TE patch Up
+    gmsh.model.geo.add_curve_loop([line_upMidRightTipU, lTL_tip[lAr], -line_upRightTipU, -lTL_slice[lAr]], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1
+    surf_tipTEpatchUpTransverseConnectionU = surfaceTag
+    gmsh.model.geo.add_curve_loop([line_upMidRightTipL, lTL_tip[lAr], -line_upRightTipL, lTL_slice[lBr]], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1
+    surf_tipTEpatchUpTransverseConnectionL = surfaceTag
+else:
+    gmsh.model.geo.add_curve_loop([-line_tipConnectionToUpRight, line_upRightTipU, lTL_slice[lAr]], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1
+    surf_tipTEpatchUpTransverseConnectionU = surfaceTag
+    gmsh.model.geo.add_curve_loop([-line_tipConnectionToUpRight, line_upRightTipL, -lTL_slice[lBr]], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1
+    surf_tipTEpatchUpTransverseConnectionL = surfaceTag
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # creation of the volumes # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+### tip Struct BL ###
 
 tipStructBLstartVolumeTag = volumeTag+1
 if bluntTrailingEdge:
@@ -461,7 +549,6 @@ for i in range(1,gridPts_alongNACA-2):
     gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
     volumeTag = volumeTag+1
 
-
 if bluntTrailingEdge:
     gmsh.model.geo.addSurfaceLoop([BLstructEndTransverseSurfTag_tipL, BLstructEndTransverseSurfTag_tipL-1, BLstructEndSurfTag_tipL, airfoilStructEndSurfTag_tipL, sTL_slice[sBLstructGrid][-1], sTL_tip[sBLstructGrid][0]], volumeTag+1)
     gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
@@ -474,18 +561,49 @@ else:
     # gmsh.model.geo.mesh.setTransfiniteVolume(volumeTag+1) ## not working... By spliting the volume into a pyramid with square basis and a prism with triangular basis, still not working!
     gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
     volumeTag = volumeTag+1
-
-
 tipStructBLendVolumeTag = volumeTag
+
 tipStructBL = list(range(tipStructBLstartVolumeTag, tipStructBLendVolumeTag+1))
 
+### tip TE patch ###
 
+tipTEpatchStartVolumeTag = volumeTag+1
+if bluntTrailingEdge:
+    gmsh.model.geo.addSurfaceLoop([surf_tipTEconnectionTEpatchMidUp, surf_tipTEtransverseConnectionU, surf_tipTEwakeTransverseConnectionU, lMsurf_tipU, sTL_slice[sTEpatchMidUp]], volumeTag+1)
+    gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
+    gmsh.model.geo.mesh.setTransfiniteVolume(volumeTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
+    volumeTag = volumeTag+1
+    gmsh.model.geo.addSurfaceLoop([surf_tipTEconnectionTEpatchMidUp, surf_tipTEtransverseConnectionL, surf_tipTEwakeTransverseConnectionL, lMsurf_tipL, sTL_slice[sTEpatchMidLow]], volumeTag+1)
+    gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
+    gmsh.model.geo.mesh.setTransfiniteVolume(volumeTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
+    volumeTag = volumeTag+1
+    gmsh.model.geo.addSurfaceLoop([sTL_tip[sTEpatchUp], sTL_slice[sTEpatchUp], BLstructStartTransverseSurfTag_tipU, surf_tipTEpatchUpTransverseConnectionU, lDsurf_tipU, lMsurf_tipU], volumeTag+1)
+    gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
+    gmsh.model.geo.mesh.setTransfiniteVolume(volumeTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
+    volumeTag = volumeTag+1
+    gmsh.model.geo.addSurfaceLoop([sTL_tip[sTEpatchUp], sTL_slice[sTEpatchLow], BLstructEndTransverseSurfTag_tipL, surf_tipTEpatchUpTransverseConnectionL, lDsurf_tipL, lMsurf_tipL], volumeTag+1)
+    gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
+    gmsh.model.geo.mesh.setTransfiniteVolume(volumeTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
+    volumeTag = volumeTag+1
+else:
+    gmsh.model.geo.addSurfaceLoop([lDsurf_tipU, sTL_slice[sTEpatchUp], surf_tipTEpatchUpTransverseConnectionU, surf_tipTEpatchconnectionStructGridUp, BLstructStartTransverseSurfTag_tipU], volumeTag+1)
+    gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
+    gmsh.model.geo.mesh.setTransfiniteVolume(volumeTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
+    volumeTag = volumeTag+1
+    gmsh.model.geo.addSurfaceLoop([lDsurf_tipL, sTL_slice[sTEpatchLow], surf_tipTEpatchUpTransverseConnectionL, surf_tipTEpatchconnectionStructGridUp, BLstructEndTransverseSurfTag_tipL], volumeTag+1)
+    gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
+    gmsh.model.geo.mesh.setTransfiniteVolume(volumeTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
+    volumeTag = volumeTag+1
+tipTEpatchEndVolumeTag = volumeTag
 
-
-
-
-
-
+tipTEpatch = list(range(tipTEpatchStartVolumeTag, tipTEpatchEndVolumeTag+1))
+    
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Generate visualise and export the mesh # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -523,7 +641,7 @@ gmsh.model.mesh.generate()
 gmsh.model.geo.synchronize()
 
 # gmsh.model.addPhysicalGroup(pb_2Dim, [*structGridSurf], 1, "CFD") # physical surface
-gmsh.model.addPhysicalGroup(pb_3Dim, [*tipStructBL], 1, "CFD") # physical surface
+gmsh.model.addPhysicalGroup(pb_3Dim, [*tipStructBL, *tipTEpatch], 1, "CFD") # physical surface
 
 
 [nodePerEntity, elemPerEntity] = countDOF()
