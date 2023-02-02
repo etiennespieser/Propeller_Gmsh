@@ -9,25 +9,25 @@ import shutil
 
 NACA_type = '4412'
 
-geometry_file = "VP1304_geom" # "VP1304_geom" , "SP2_geom"
+geometry_file = "SP2_geom" # "VP1304_geom" , "SP2_geom"
 
 bluntTrailingEdge = True
 optimisedGridSpacing = True
 
-gridPts_alongNACA = 10
+gridPts_alongNACA = 5
 
 gridPts_inBL = 3 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
 TEpatchGridFlaringAngle = 0 # deg
-gridPts_alongTEpatch = 5 # > 2 for split into fully hex mesh
+gridPts_alongTEpatch = 3 # > 2 for split into fully hex mesh
 gridGeomProg_alongTEpatch = 1.05
 
 wakeGridFlaringAngle = 0 # deg
 gridPts_alongWake = 3 # > 2 for split into fully hex mesh
 gridGeomProg_alongWake = 1.0
 
-[radii_vec, chord_vec, pitch_vecAngle, rake_vec, skew_vecAngle] = read_geometry(geometry_file+".dat")
+[radii_vec, chord_vec, pitch_vecAngle, rake_vec, skew_vecAngle] = read_geometry(geometry_file+".dat") # reads geometry and defines tip truncation
 
 skew_vec = np.sin(skew_vecAngle*np.pi/180)*radii_vec
 # "SP2_geom.dat" considers the total rake. rake_vec = generatorRake_vec + skew_vec*np.tan(pitch_vecAngle*np.pi/180)
@@ -40,9 +40,9 @@ skew_vec = np.sin(skew_vecAngle*np.pi/180)*radii_vec
 
 airfoilReferenceCoordinate = np.array([skew_vec, -rake_vec, -radii_vec]).transpose()
 
-# for dummy geom, uncomment below:
+# # for dummy geom, uncomment below:
 # radii_vec = [0.1, 0.3]
-
+# pitch_vecAngle = [20.0, 30.0]
 
 radii_step = [1] * len(radii_vec) # number of radial elements between to radial slices. 
 
@@ -75,31 +75,33 @@ volumeTag = 0
 # # Creation of the propeller mesh # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-
 # Creation of blade number 1 ***   ***   ***
 rotMat = rotationMatrix([0.0, 0.0, 0.0]) # angles in degree
-
+shiftVec = [0.0, 0.0, 0.0]
 for i in range(len(radii_vec)):
 
     structTag = [pointTag, lineTag, surfaceTag]
     GeomSpec = [NACA_type, bluntTrailingEdge, optimisedGridSpacing, pitch_vecAngle[i], chord_vec[i], airfoilReferenceAlongChord_c*chord_vec[i], airfoilReferenceCoordinate[i], height_LE_c*chord_vec[i], height_TE_c*chord_vec[i], TEpatchLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), TEpatchGridFlaringAngle, wakeLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), wakeGridFlaringAngle]
     GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
 
-    [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat)
+    if i == len(radii_vec)-1:
+        GeomSpec[0] = '0012' # force 'NACA_type' to be 0012 for the last slice
+    [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
     
     pTS1.append(pointTag_list)
     lTS1.append(lineTag_list)
     sTS1.append(surfaceTag_list)
 
-
 [tlTS1, lineTag] = gmeshed_blade_tl(pTS1, gridPts_alongNACA, radii_step, bluntTrailingEdge, lineTag)
 
 [tsTS1, surfaceTag] = gmeshed_blade_ts(lTS1, tlTS1, gridPts_alongNACA, radii_step, bluntTrailingEdge, surfaceTag)
 
+[surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_bladeTip_ts(pTS1[-1], lTS1[-1], GeomSpec, GridPtsSpec, rotMat, shiftVec, pointTag, lineTag, surfaceTag)
+
 [sStructGridSkin1, sairfoilSkin1] = returnStructGridOuterShell(sTS1, tsTS1, radii_step, bluntTrailingEdge)
 
 
-# # Creation of blade number 2 ***   ***   ***
+# # # Creation of blade number 2 ***   ***   ***
 rotMat = rotationMatrix([180.0, 0.0, 180.0]) # angles in degree
 
 for i in range(len(radii_vec)):
@@ -108,7 +110,9 @@ for i in range(len(radii_vec)):
     GeomSpec = [NACA_type, bluntTrailingEdge, optimisedGridSpacing, pitch_vecAngle[i], chord_vec[i], airfoilReferenceAlongChord_c*chord_vec[i], airfoilReferenceCoordinate[i], height_LE_c*chord_vec[i], height_TE_c*chord_vec[i], TEpatchLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), TEpatchGridFlaringAngle, wakeLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), wakeGridFlaringAngle]
     GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
 
-    [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat)
+    if i == len(radii_vec)-1:
+        GeomSpec[0] = '0012' # force 'NACA_type' to be 0012 for the last slice
+    [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
     
     pTS2.append(pointTag_list)
     lTS2.append(lineTag_list)
@@ -118,17 +122,19 @@ for i in range(len(radii_vec)):
 
 [tsTS2, surfaceTag] = gmeshed_blade_ts(lTS2, tlTS2, gridPts_alongNACA, radii_step, bluntTrailingEdge, surfaceTag)
 
+[surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_bladeTip_ts(pTS2[-1], lTS2[-1], GeomSpec, GridPtsSpec, rotMat, shiftVec, pointTag, lineTag, surfaceTag)
+
 [sStructGridSkin2, sairfoilSkin2] = returnStructGridOuterShell(sTS2, tsTS2, radii_step, bluntTrailingEdge)
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Creation of the transfinite blade volumes # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-[vTS1, volumeTag] = gmeshed_blade_vol(sTS1, tsTS1, gridPts_alongNACA, radii_step, bluntTrailingEdge, volumeTag)
-[vTS2, volumeTag] = gmeshed_blade_vol(sTS2, tsTS2, gridPts_alongNACA, radii_step, bluntTrailingEdge, volumeTag)
+# [vTS1, volumeTag] = gmeshed_blade_vol(sTS1, tsTS1, gridPts_alongNACA, radii_step, bluntTrailingEdge, volumeTag)
+# [vTS2, volumeTag] = gmeshed_blade_vol(sTS2, tsTS2, gridPts_alongNACA, radii_step, bluntTrailingEdge, volumeTag)
 
-vol_blade_1 = returnStructGridVol(vTS1, bluntTrailingEdge)
-vol_blade_2 = returnStructGridVol(vTS2, bluntTrailingEdge)
+# vol_blade_1 = returnStructGridVol(vTS1, bluntTrailingEdge)
+# vol_blade_2 = returnStructGridVol(vTS2, bluntTrailingEdge)
 
 
 
@@ -136,30 +142,30 @@ vol_blade_2 = returnStructGridVol(vTS2, bluntTrailingEdge)
 # # Creation of the cylindrical volumes # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-y_max_cyl1 = 0.05
-y_min_cyl1 = -0.1
-r_cyl1 = 0.15
-elemSize_cyl1 = 0.01 #  0.001
+# y_max_cyl1 = 0.05
+# y_min_cyl1 = -0.1
+# r_cyl1 = 0.15
+# elemSize_cyl1 = 0.01 #  0.001
 
-y_max_cyl2 = 0.075
-y_min_cyl2 = -0.15
-r_cyl2 = 0.2
-elemSize_cyl2 = 0.01 # 0.002
+# y_max_cyl2 = 0.075
+# y_min_cyl2 = -0.15
+# r_cyl2 = 0.2
+# elemSize_cyl2 = 0.01 # 0.002
 
-[ cylSurf1, pointTag, lineTag, surfaceTag] = gmeshed_cylinder_surf(y_min_cyl1, y_max_cyl1, r_cyl1, elemSize_cyl1, pointTag, lineTag, surfaceTag)
-[ cylSurf2, pointTag, lineTag, surfaceTag] = gmeshed_cylinder_surf(y_min_cyl2, y_max_cyl2, r_cyl2, elemSize_cyl2, pointTag, lineTag, surfaceTag)
+# [ cylSurf1, pointTag, lineTag, surfaceTag] = gmeshed_cylinder_surf(y_min_cyl1, y_max_cyl1, r_cyl1, elemSize_cyl1, pointTag, lineTag, surfaceTag)
+# [ cylSurf2, pointTag, lineTag, surfaceTag] = gmeshed_cylinder_surf(y_min_cyl2, y_max_cyl2, r_cyl2, elemSize_cyl2, pointTag, lineTag, surfaceTag)
 
-gmsh.model.geo.addSurfaceLoop([*sStructGridSkin1, *sStructGridSkin2, *cylSurf1], volumeTag+1)
-gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
-gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
-volumeTag = volumeTag+1
-vol_unstrucCFD = volumeTag
+# gmsh.model.geo.addSurfaceLoop([*sStructGridSkin1, *sStructGridSkin2, *cylSurf1], volumeTag+1)
+# gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
+# gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
+# volumeTag = volumeTag+1
+# vol_unstrucCFD = volumeTag
 
-gmsh.model.geo.addSurfaceLoop([*cylSurf1, *cylSurf2], volumeTag+1)
-gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
-gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
-volumeTag = volumeTag+1
-vol_unstrucBUFF = volumeTag
+# gmsh.model.geo.addSurfaceLoop([*cylSurf1, *cylSurf2], volumeTag+1)
+# gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
+# gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
+# volumeTag = volumeTag+1
+# vol_unstrucBUFF = volumeTag
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Generate visualise and export the mesh # #
@@ -197,13 +203,13 @@ gmsh.model.mesh.generate()
 # Create the relevant Gmsh data structures from Gmsh model.
 gmsh.model.geo.synchronize()
 
-GMSHvolumeTag = 0
-for volBeat in [*vol_blade_1, *vol_blade_2]:
-    GMSHvolumeTag = GMSHvolumeTag + 1
-    gmsh.model.addPhysicalGroup(pb_3Dim, volBeat, GMSHvolumeTag, "Struct Grid volume 1") # physical volume
+# GMSHvolumeTag = 0
+# for volBeat in [*vol_blade_1, *vol_blade_2]:
+#     GMSHvolumeTag = GMSHvolumeTag + 1
+#     gmsh.model.addPhysicalGroup(pb_3Dim, volBeat, GMSHvolumeTag, "Struct Grid volume 1") # physical volume
 
-gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucCFD], GMSHvolumeTag+1, "BL volume") # physical volume
-gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucBUFF], GMSHvolumeTag+2, "BL volume") # physical volume
+# gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucCFD], GMSHvolumeTag+1, "BL volume") # physical volume
+# gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucBUFF], GMSHvolumeTag+2, "BL volume") # physical volume
 
 # gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin1], 11, "BL volume") # physical surface
 # gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin2], 12, "BL volume") # physical surface

@@ -16,9 +16,9 @@ NACA_type = '0012'
 bluntTrailingEdge = False
 optimisedGridSpacing = True
 
-gridPts_alongNACA = 10
+gridPts_alongNACA = 30
 
-gridPts_inBL = 5 # > 2 for split into fully hex mesh
+gridPts_inBL = 20 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
 TEpatchGridFlaringAngle = 10 # deg
@@ -63,11 +63,12 @@ airfoilReferenceAlongChord = 0.5*chord
 airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
 
 rotMat = rotationMatrix([0.0, 0.0, 0.0]) # angles in degree
+shiftVec = [0.0, 0.0, 0.0]
 
 structTag = [pointTag, lineTag, surfaceTag]
 GeomSpec = [NACA_type, bluntTrailingEdge, optimisedGridSpacing, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
 GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
-[pTL_slice, lTL_slice, sTL_slice, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat)
+[pTL_slice, lTL_slice, sTL_slice, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
 
 bladeLine = returnStructGridOuterContour(lTL_slice, bluntTrailingEdge)
 structGridSurf = returnStructGridSide(sTL_slice, bluntTrailingEdge)
@@ -85,7 +86,7 @@ rotMat = rotationMatrix([-pitch, -pitch, 90.0]) # angles in degree
 structTag = [pointTag, lineTag, surfaceTag]
 GeomSpec = ['0012', bluntTrailingEdge, optimisedGridSpacing, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
 GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
-[pTL_tip, lTL_tip, sTL_tip, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat)
+[pTL_tip, lTL_tip, sTL_tip, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
 
 
 
@@ -232,7 +233,6 @@ if bluntTrailingEdge:
     lineTag = lineTag+1
     line_upMidRightTipM = lineTag
 
-
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # creation of the surfaces # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -253,7 +253,6 @@ if bluntTrailingEdge:
     gmsh.model.geo.mesh.setTransfiniteCurve(line_upMidRightTipL, gridPts_tipSide)
     gmsh.model.geo.mesh.setTransfiniteCurve(line_TEuTipM, gridPts_inTE)
     gmsh.model.geo.mesh.setTransfiniteCurve(line_upMidRightTipM, gridPts_inTE)
-
 else:
     gmsh.model.geo.mesh.setTransfiniteCurve(line_tipConnectionToTEalongAirfoil, 2)
     gmsh.model.geo.mesh.setTransfiniteCurve(line_tipConnectionToUp, gridPts_inBL, "Progression", gridGeomProg_inBL)
