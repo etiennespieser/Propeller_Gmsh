@@ -11,12 +11,12 @@ NACA_type = '4412'
 
 geometry_file = "SP2_geom" # "VP1304_geom" , "SP2_geom"
 
-bluntTrailingEdge = False
+bluntTrailingEdge = True
 optimisedGridSpacing = True
 
-gridPts_alongNACA = 5
+gridPts_alongNACA = 200
 
-gridPts_inBL = 3 # > 2 for split into fully hex mesh
+gridPts_inBL = 50 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
 TEpatchGridFlaringAngle = 0 # deg
@@ -41,8 +41,8 @@ skew_vec = np.sin(skew_vecAngle*np.pi/180)*radii_vec
 airfoilReferenceCoordinate = np.array([skew_vec, -rake_vec, -radii_vec]).transpose()
 
 # # for dummy geom, uncomment below:
-radii_vec = [0.1, 0.3]
-pitch_vecAngle = [20.0, 30.0]
+radii_vec = [0.1, 0.3, 0.5]
+pitch_vecAngle = [20.0, 30.0, 35.0]
 
 radii_step = [1] * len(radii_vec) # number of radial elements between to radial slices. 
 
@@ -53,7 +53,6 @@ height_LE_c = 0.05 # Structured Grid offset layer gap at the leading edge
 height_TE_c = 0.1 # Structured Grid offset layer gap at the trailing edge
 gridPts_inTE = int(gridPts_inBL/4) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
 airfoilReferenceAlongChord_c = 0.5
-
 
 # Initialize gmsh:
 gmsh.initialize()
@@ -96,35 +95,35 @@ for i in range(len(radii_vec)):
 
 [tsTS1, surfaceTag] = gmeshed_blade_ts(lTS1, tlTS1, gridPts_alongNACA, radii_step, bluntTrailingEdge, surfaceTag)
 
-[surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_bladeTip_ts(pTS1[-1], lTS1[-1], GeomSpec, GridPtsSpec, rotMat, shiftVec, pointTag, lineTag, surfaceTag)
+[tip_sTS1, pointTag, lineTag, surfaceTag] = gmeshed_bladeTip_ts(pTS1[-1], lTS1[-1], GeomSpec, GridPtsSpec, rotMat, shiftVec, pointTag, lineTag, surfaceTag)
 
-[sStructGridSkin1, sairfoilSkin1] = returnStructGridOuterShell(sTS1, tsTS1, radii_step, bluntTrailingEdge)
+[sStructGridSkin1, sairfoilSkin1] = returnStructGridOuterShell(sTS1, tsTS1, tip_sTS1, radii_step, bluntTrailingEdge)
 
 
 # # # Creation of blade number 2 ***   ***   ***
-rotMat = rotationMatrix([180.0, 0.0, 180.0]) # angles in degree
+# rotMat = rotationMatrix([180.0, 0.0, 180.0]) # angles in degree
 
-for i in range(len(radii_vec)):
+# for i in range(len(radii_vec)):
 
-    structTag = [pointTag, lineTag, surfaceTag]
-    GeomSpec = [NACA_type, bluntTrailingEdge, optimisedGridSpacing, pitch_vecAngle[i], chord_vec[i], airfoilReferenceAlongChord_c*chord_vec[i], airfoilReferenceCoordinate[i], height_LE_c*chord_vec[i], height_TE_c*chord_vec[i], TEpatchLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), TEpatchGridFlaringAngle, wakeLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), wakeGridFlaringAngle]
-    GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
+#     structTag = [pointTag, lineTag, surfaceTag]
+#     GeomSpec = [NACA_type, bluntTrailingEdge, optimisedGridSpacing, pitch_vecAngle[i], chord_vec[i], airfoilReferenceAlongChord_c*chord_vec[i], airfoilReferenceCoordinate[i], height_LE_c*chord_vec[i], height_TE_c*chord_vec[i], TEpatchLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), TEpatchGridFlaringAngle, wakeLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), wakeGridFlaringAngle]
+#     GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
 
-    if i == len(radii_vec)-1:
-        GeomSpec[0] = '0012' # force 'NACA_type' to be 0012 for the last slice
-    [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
+#     if i == len(radii_vec)-1:
+#         GeomSpec[0] = '0012' # force 'NACA_type' to be 0012 for the last slice
+#     [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
     
-    pTS2.append(pointTag_list)
-    lTS2.append(lineTag_list)
-    sTS2.append(surfaceTag_list)
+#     pTS2.append(pointTag_list)
+#     lTS2.append(lineTag_list)
+#     sTS2.append(surfaceTag_list)
 
-[tlTS2, lineTag] = gmeshed_blade_tl(pTS2, gridPts_alongNACA, radii_step, bluntTrailingEdge, lineTag)
+# [tlTS2, lineTag] = gmeshed_blade_tl(pTS2, gridPts_alongNACA, radii_step, bluntTrailingEdge, lineTag)
 
-[tsTS2, surfaceTag] = gmeshed_blade_ts(lTS2, tlTS2, gridPts_alongNACA, radii_step, bluntTrailingEdge, surfaceTag)
+# [tsTS2, surfaceTag] = gmeshed_blade_ts(lTS2, tlTS2, gridPts_alongNACA, radii_step, bluntTrailingEdge, surfaceTag)
 
-[surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_bladeTip_ts(pTS2[-1], lTS2[-1], GeomSpec, GridPtsSpec, rotMat, shiftVec, pointTag, lineTag, surfaceTag)
+# [tip_sTS2, pointTag, lineTag, surfaceTag] = gmeshed_bladeTip_ts(pTS2[-1], lTS2[-1], GeomSpec, GridPtsSpec, rotMat, shiftVec, pointTag, lineTag, surfaceTag)
 
-[sStructGridSkin2, sairfoilSkin2] = returnStructGridOuterShell(sTS2, tsTS2, radii_step, bluntTrailingEdge)
+# [sStructGridSkin2, sairfoilSkin2] = returnStructGridOuterShell(sTS2, tsTS2, radii_step, bluntTrailingEdge)
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Creation of the transfinite blade volumes # #
@@ -212,7 +211,8 @@ gmsh.model.geo.synchronize()
 # gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucBUFF], GMSHvolumeTag+2, "BL volume") # physical volume
 
 # gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin1], 11, "BL volume") # physical surface
-# gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin2], 12, "BL volume") # physical surface
+gmsh.model.addPhysicalGroup(pb_2Dim, [*sStructGridSkin1], 12, "BL volume") # physical surface
+# gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin2], 13, "BL volume") # physical surface
 
 
 [nodePerEntity, elemPerEntity] = countDOF()
