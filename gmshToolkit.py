@@ -1342,7 +1342,7 @@ def gmeshed_bladeTip_ts(pTL_slice, lTL_slice, GeomSpec, GridPtsSpec, rotMat, shi
     shiftVec = np.matmul(rotMat, np.array([airfoilReferenceCoordinate[0], airfoilReferenceCoordinate[1], -airfoilReferenceCoordinate[2]])) + bladeShiftVec
     GeomSpec[6] = [0.0, 0.0, 0.0] # airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
     # rotMat = np.matmul(rotMat, rotationMatrix([-pitch, -pitch, 90.0])) # angles in degree
-    rotMat = np.matmul(rotationMatrix([-pitch, pitch, -90.0]), rotMat) # angles in degree
+    rotMat = np.matmul(rotMat, rotationMatrix([-pitch, pitch, -90.0])) # angles in degree
 
     [pTL_tip, lTL_tip, sTL_tip, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
 

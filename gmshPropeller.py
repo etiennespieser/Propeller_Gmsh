@@ -11,7 +11,7 @@ NACA_type = '4412'
 
 geometry_file = "SP2_geom" # "VP1304_geom" , "SP2_geom"
 
-bluntTrailingEdge = True
+bluntTrailingEdge = False
 optimisedGridSpacing = True
 
 gridPts_alongNACA = 5
@@ -41,8 +41,8 @@ skew_vec = np.sin(skew_vecAngle*np.pi/180)*radii_vec
 airfoilReferenceCoordinate = np.array([skew_vec, -rake_vec, -radii_vec]).transpose()
 
 # # for dummy geom, uncomment below:
-# radii_vec = [0.1, 0.3]
-# pitch_vecAngle = [20.0, 30.0]
+radii_vec = [0.1, 0.3]
+pitch_vecAngle = [20.0, 30.0]
 
 radii_step = [1] * len(radii_vec) # number of radial elements between to radial slices. 
 
