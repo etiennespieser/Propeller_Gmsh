@@ -2406,7 +2406,7 @@ def gmeshed_cylinder_surf(y_min_cyl, y_max_cyl, r_cyl, elemSize_cyl, pointTag, l
     cylTopEdges = [line_cylTopArc1, line_cylTopArc2, line_cylTopArc3, line_cylTopArc4]
     gmsh.model.geo.add_curve_loop( [*cylTopEdges], surfaceTag+1) 
     gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
-    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
     gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
     surfaceTag = surfaceTag+1
     surf_cylTop = surfaceTag
@@ -2414,7 +2414,7 @@ def gmeshed_cylinder_surf(y_min_cyl, y_max_cyl, r_cyl, elemSize_cyl, pointTag, l
     cylBotEdges = [line_cylBotArc1, line_cylBotArc2, line_cylBotArc3, line_cylBotArc4]
     gmsh.model.geo.add_curve_loop( [*cylBotEdges], surfaceTag+1) 
     gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
-    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
     gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
     surfaceTag = surfaceTag+1
     surf_cylBot = surfaceTag
