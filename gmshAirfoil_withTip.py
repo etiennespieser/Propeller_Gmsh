@@ -13,10 +13,10 @@ import logging # used for try catch statement
 
 NACA_type = '0012'
 
-bluntTrailingEdge = False
+bluntTrailingEdge = True
 optimisedGridSpacing = True
 
-gridPts_alongNACA = 30
+gridPts_alongNACA = 10
 
 gridPts_inBL = 20 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
