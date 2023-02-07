@@ -10,14 +10,14 @@ import shutil
 NACA_type = '4412'
 
 bluntTrailingEdge = False
-optimisedGridSpacing = True
+optimisedGridSpacing = False
 
-gridPts_alongNACA = 5
+gridPts_alongNACA = 50
 
-gridPts_inBL = 3 # > 2 for split into fully hex mesh
+gridPts_inBL = 30 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
-TEpatchGridFlaringAngle = 0 # deg
+TEpatchGridFlaringAngle = 20 # deg
 gridPts_alongTEpatch = 5 # > 2 for split into fully hex mesh
 gridGeomProg_alongTEpatch = 1.05
 
@@ -51,19 +51,20 @@ volumeTag = 0
 airfoilReferenceAlongChord = 0.5*chord
 TEpatchLength = 0.1*chord*np.cos(pitch*np.pi/180) # length of the TEpatch in along the x-axis
 wakeLength = 0.3*chord*np.cos(pitch*np.pi/180) # length of the wake in along the x-axis
-height_LE = 0.05*chord # Structured Grid offset layer gap at the leading edge
-height_TE = 0.1*chord # Structured Grid offset layer gap at the trailing edge
+height_LE = 0.1*chord # Structured Grid offset layer gap at the leading edge
+height_TE = 0.2*chord # Structured Grid offset layer gap at the trailing edge
 gridPts_inTE = int(gridPts_inBL/4) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
 
 airfoilReferenceAlongChord = 0.5*chord
 airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
 
 rotMat = rotationMatrix([0.0, 0.0, 0.0]) # angles in degree
+shiftVec = [0.0, 0.0, 0.0] # shift of the airfoil origin
 
 structTag = [pointTag, lineTag, surfaceTag]
 GeomSpec = [NACA_type, bluntTrailingEdge, optimisedGridSpacing, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
 GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
-[pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat)
+[pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
 
 bladeLine = returnStructGridOuterContour(lineTag_list, bluntTrailingEdge)
 structGridSurf = returnStructGridSide(surfaceTag_list, bluntTrailingEdge)
