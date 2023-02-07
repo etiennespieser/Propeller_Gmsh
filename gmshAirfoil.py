@@ -10,14 +10,14 @@ import shutil
 NACA_type = '4412'
 
 bluntTrailingEdge = False
-optimisedGridSpacing = False
+optimisedGridSpacing = True
 
-gridPts_alongNACA = 50
+gridPts_alongNACA = 5
 
-gridPts_inBL = 30 # > 2 for split into fully hex mesh
+gridPts_inBL = 3 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
-TEpatchGridFlaringAngle = 20 # deg
+TEpatchGridFlaringAngle = 0 # deg
 gridPts_alongTEpatch = 5 # > 2 for split into fully hex mesh
 gridGeomProg_alongTEpatch = 1.05
 
@@ -51,8 +51,8 @@ volumeTag = 0
 airfoilReferenceAlongChord = 0.5*chord
 TEpatchLength = 0.1*chord*np.cos(pitch*np.pi/180) # length of the TEpatch in along the x-axis
 wakeLength = 0.3*chord*np.cos(pitch*np.pi/180) # length of the wake in along the x-axis
-height_LE = 0.1*chord # Structured Grid offset layer gap at the leading edge
-height_TE = 0.2*chord # Structured Grid offset layer gap at the trailing edge
+height_LE = 0.05*chord # Structured Grid offset layer gap at the leading edge
+height_TE = 0.1*chord # Structured Grid offset layer gap at the trailing edge
 gridPts_inTE = int(gridPts_inBL/4) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
 
 airfoilReferenceAlongChord = 0.5*chord
