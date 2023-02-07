@@ -59,11 +59,12 @@ airfoilReferenceAlongChord = 0.5*chord
 airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
 
 rotMat = rotationMatrix([0.0, 0.0, 0.0]) # angles in degree
+shiftVec = [0.0, 0.0, 0.0] # shift of the airfoil origin
 
 structTag = [pointTag, lineTag, surfaceTag]
 GeomSpec = [NACA_type, bluntTrailingEdge, optimisedGridSpacing, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
 GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
-[pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat)
+[pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
 
 bladeLine = returnStructGridOuterContour(lineTag_list, bluntTrailingEdge)
 structGridSurf = returnStructGridSide(surfaceTag_list, bluntTrailingEdge)
