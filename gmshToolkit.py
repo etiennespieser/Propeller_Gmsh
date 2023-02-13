@@ -2,9 +2,6 @@
 # available under MIT licence at: https://github.com/etiennespieser  
 # ------------------------------------------------------------------------------------
 
-
-# aims at reproducing the rod-airfoil benchmark, Casalino, Jacob and Roger aiaaj03 DOI: 10.2514/2.1959
-
 # # Drawing of the NACA profile inspired from
 # the Wikipedia page: https://en.wikipedia.org/wiki/NACA_airfoil
 # JoshTheEngineer matlab's code: https://github.com/jte0419/NACA_4_Digit_Airfoil

@@ -9,7 +9,7 @@ import shutil
 
 NACA_type = '4412'
 
-geometry_file = "SP2_geom" # "VP1304_geom" , "SP2_geom"
+geometry_file = "VP1304_geom" # "VP1304_geom" , "SP2_geom"
 
 bluntTrailingEdge = True
 optimisedGridSpacing = False
@@ -207,7 +207,7 @@ gmsh.model.geo.synchronize()
 gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", 2) # most robust way to obtain pure hex mesh: subdivise it
 # gmsh.option.setNumber('Mesh.RecombinationAlgorithm', 3) # perhaps better but conflict with transfinite mesh... to dig further
 
-gmsh.model.mesh.generate()
+gmsh.model.mesh.generate(2)
 
 # gmsh.model.mesh.recombine()
 # gmsh.model.mesh.refine()
@@ -227,8 +227,10 @@ for volBeat in [*vol_blade_1, *vol_blade_2]:
 gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucCFD], GMSHvolumeTag+1, "BL volume") # physical volume
 gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucBUFF], GMSHvolumeTag+2, "BL volume") # physical volume
 
-# gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin1], 11, "BL volume") # physical surface
+gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin1], 11, "BL volume") # physical surface
 # gmsh.model.addPhysicalGroup(pb_2Dim, [*sStructGridSkin1], 12, "BL volume") # physical surface
+gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin2], 13, "BL volume") # physical surface
+
 
 [nodePerEntity, elemPerEntity] = countDOF()
 
