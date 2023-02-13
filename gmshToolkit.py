@@ -2495,6 +2495,7 @@ def countDOF():
 
     return nodePerEntity, elemPerEntity
 
+import re # Zhicheng: use regex to replace ',' and '\t' with space
 def read_geometry(geometry_file):
     with open(geometry_file, "r") as datafile:
         radii_vec = []
@@ -2505,7 +2506,8 @@ def read_geometry(geometry_file):
         for line in datafile:
             if any(char.isupper() for char in line):
                 continue    
-            data = line.split()
+            # data = line.split()
+            data = re.sub('[,\t]+', ' ', line).split() # Zhicheng: use regex to replace ',' and '\t' with space
             floats = []
             for x in data:
                 floats.append(float(x))
