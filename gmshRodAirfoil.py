@@ -14,9 +14,11 @@ NACA_type = '4412'
 bluntTrailingEdge = False
 optimisedGridSpacing = True
 
-gridPts_alongNACA = 5
+gridPts_alongNACA = 50
 
-gridPts_inBL = 3 # > 2 for split into fully hex mesh
+gridPts_alongSpan = 10
+
+gridPts_inBL = 30 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
 TEpatchGridFlaringAngle = 0 # deg
@@ -29,22 +31,31 @@ gridGeomProg_alongWake = 1.0
 
 pitch = 20.0 # deg
 chord = 0.2 # m 
+span = 0.75*chord # m
+
 
 # Initialize gmsh:
 gmsh.initialize()
 
-pTS1 = [] # pointTag_struct -- blade 1
-lTS1 = [] # lineTag_struct -- blade 1
-sTS1 = [] # surfaceTag_struct -- blade 1
+pTS_airfoil = [] # pointTag_struct -- airfoil
+lTS_airfoil = [] # lineTag_struct -- airfoil
+sTS_airfoil = [] # surfaceTag_struct -- airfoil
 
-pTS2 = [] # pointTag_struct -- blade 2
-lTS2 = [] # lineTag_struct -- blade 2
-sTS2 = [] # surfaceTag_struct -- blade 2
+pTS_rod = [] # pointTag_struct -- rod
+lTS_rod = [] # lineTag_struct -- rod
+sTS_rod = [] # surfaceTag_struct -- rod
+
+pTS_frame = [] # pointTag_struct -- CFD+BUFF
+lTS_frame = [] # lineTag_struct -- CFD+BUFF
+sTS_frame = [] # surfaceTag_struct -- CFD+BUFF
 
 pointTag = 0
 lineTag = 0
 surfaceTag = 0
 volumeTag = 0
+
+rotMat = rotationMatrix([0.0, 0.0, 0.0]) # angles in degree around [axisZ, axisY, axisX]
+shiftVec = np.array([0.0, 0.0, 0.0]) # shift of the origin
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Creation of the airfoil mesh # #
@@ -60,165 +71,42 @@ gridPts_inTE = int(gridPts_inBL/4) # if the TE is blunt, number of cells in the 
 airfoilReferenceAlongChord = 0.5*chord
 airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
 
-rotMat = rotationMatrix([0.0, 0.0, 0.0]) # angles in degree
-shiftVec = [0.0, 0.0, 0.0] # shift of the airfoil origin
-
 structTag = [pointTag, lineTag, surfaceTag]
 GeomSpec = [NACA_type, bluntTrailingEdge, optimisedGridSpacing, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
 GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
-[pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
+[pTL_airfoil, lTL_airfoil, sTL_airfoil, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec) 
 
-bladeLine = returnStructGridOuterContour(lineTag_list, bluntTrailingEdge)
-structGridSurf = returnStructGridSide(surfaceTag_list, bluntTrailingEdge)
-
+bladeLine = returnStructGridOuterContour(lTL_airfoil, bluntTrailingEdge)
+structGridSurf = returnStructGridSide(sTL_airfoil, bluntTrailingEdge)
 
 # $$$$$$$$$$$$$$$$$$$$$
 # # Creation of rod # #
 # $$$$$$$$$$$$$$$$$$$$$
-
-rotMat = rotationMatrix([20.0, 30.0, 40.0]) # angles in degree
-shiftVec = [0.0, 0.0, 0.0] # shift of the airfoil origin
 
 rodPos = [-2.0*chord, 0.0, 0.0]
 rodR = 0.1*chord
 rodElemSize = 0.02*chord
 rodBLwidth = 0.05*chord
 
-
 gridPts_alongRod = int(2*np.pi*rodR/rodElemSize/4)
 gridPts_inRodBL = 5
 gridGeomProg_inRodBL = 1.1
 
-#### gmeshed_cylinder_line
-
-
-
-# $$$$$$$$$$$$$$$$$$$$$$$$$$$$
-# # creation of the Points # #
-# $$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-rotVec = np.matmul(rotMat, np.array([rodPos[0], rodPos[1], rodPos[2]])) - shiftVec
-gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], rodR/10, pointTag+1)
-pointTag = pointTag+1 # store the last 'pointTag' from previous loop
-point_rodCenter = pointTag
-
-gmsh.model.geo.addPoint(rodPos[0]+rodR, rodPos[1], rodPos[2], rodR/10,pointTag+1)
-pointTag = pointTag+1 # store the last 'pointTag' from previous loop
-point_rodPt1 = pointTag
-gmsh.model.geo.addPoint(rodPos[0], rodPos[1]+rodR, rodPos[2], rodR/10,pointTag+1)
-pointTag = pointTag+1 # store the last 'pointTag' from previous loop
-point_rodPt2 = pointTag
-gmsh.model.geo.addPoint(rodPos[0]-rodR, rodPos[1], rodPos[2], rodR/10,pointTag+1)
-pointTag = pointTag+1 # store the last 'pointTag' from previous loop
-point_rodPt3 = pointTag
-gmsh.model.geo.addPoint(rodPos[0], rodPos[1]-rodR, rodPos[2], rodR/10,pointTag+1)
-pointTag = pointTag+1 # store the last 'pointTag' from previous loop
-point_rodPt4 = pointTag
-
-gmsh.model.geo.addPoint(rodPos[0]+rodR+rodBLwidth, rodPos[1], rodPos[2], rodR/10,pointTag+1)
-pointTag = pointTag+1 # store the last 'pointTag' from previous loop
-point_rodBLpt1 = pointTag
-gmsh.model.geo.addPoint(rodPos[0], rodPos[1]+rodR+rodBLwidth, rodPos[2], rodR/10,pointTag+1)
-pointTag = pointTag+1 # store the last 'pointTag' from previous loop
-point_rodBLpt2 = pointTag
-gmsh.model.geo.addPoint(rodPos[0]-rodR-rodBLwidth, rodPos[1], rodPos[2], rodR/10,pointTag+1)
-pointTag = pointTag+1 # store the last 'pointTag' from previous loop
-point_rodBLpt3 = pointTag
-gmsh.model.geo.addPoint(rodPos[0], rodPos[1]-rodR-rodBLwidth, rodPos[2], rodR/10,pointTag+1)
-pointTag = pointTag+1 # store the last 'pointTag' from previous loop
-point_rodBLpt4 = pointTag
-
-# $$$$$$$$$$$$$$$$$$$$$$$$$$$
-# # creation of the Lines # #
-# $$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-gmsh.model.geo.add_line(point_rodPt1, point_rodBLpt1, lineTag+1)
-gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_inRodBL, "Progression", gridGeomProg_inRodBL)
-lineTag = lineTag+1 # store the last 'lineTag' from previous loop
-line_rodConnect1 = lineTag
-gmsh.model.geo.add_line(point_rodPt2, point_rodBLpt2, lineTag+1)
-gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_inRodBL, "Progression", gridGeomProg_inRodBL)
-lineTag = lineTag+1 # store the last 'lineTag' from previous loop
-line_rodConnect2 = lineTag
-gmsh.model.geo.add_line(point_rodPt3, point_rodBLpt3, lineTag+1)
-gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_inRodBL, "Progression", gridGeomProg_inRodBL)
-lineTag = lineTag+1 # store the last 'lineTag' from previous loop
-line_rodConnect3 = lineTag
-gmsh.model.geo.add_line(point_rodPt4, point_rodBLpt4, lineTag+1)
-gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_inRodBL, "Progression", gridGeomProg_inRodBL)
-lineTag = lineTag+1 # store the last 'lineTag' from previous loop
-line_rodConnect4 = lineTag
-
-gmsh.model.geo.addCircleArc(point_rodPt1, point_rodCenter, point_rodPt2, lineTag+1)
-gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
-lineTag = lineTag+1 # store the last 'lineTag' from previous loop
-line_rodArc1 = lineTag
-gmsh.model.geo.addCircleArc(point_rodPt2, point_rodCenter, point_rodPt3, lineTag+1)
-gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
-lineTag = lineTag+1 # store the last 'lineTag' from previous loop
-line_rodArc2 = lineTag
-gmsh.model.geo.addCircleArc(point_rodPt3, point_rodCenter, point_rodPt4, lineTag+1)
-gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
-lineTag = lineTag+1 # store the last 'lineTag' from previous loop
-line_rodArc3 = lineTag
-gmsh.model.geo.addCircleArc(point_rodPt4, point_rodCenter, point_rodPt1, lineTag+1)
-gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
-lineTag = lineTag+1 # store the last 'lineTag' from previous loop
-line_rodArc4 = lineTag
-
-gmsh.model.geo.addCircleArc(point_rodBLpt1, point_rodCenter, point_rodBLpt2, lineTag+1)
-gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
-lineTag = lineTag+1 # store the last 'lineTag' from previous loop
-line_rodBLarc1 = lineTag
-gmsh.model.geo.addCircleArc(point_rodBLpt2, point_rodCenter, point_rodBLpt3, lineTag+1)
-gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
-lineTag = lineTag+1 # store the last 'lineTag' from previous loop
-line_rodBLarc2 = lineTag
-gmsh.model.geo.addCircleArc(point_rodBLpt3, point_rodCenter, point_rodBLpt4, lineTag+1)
-gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
-lineTag = lineTag+1 # store the last 'lineTag' from previous loop
-line_rodBLarc3 = lineTag
-gmsh.model.geo.addCircleArc(point_rodBLpt4, point_rodCenter, point_rodBLpt1, lineTag+1)
-gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
-lineTag = lineTag+1 # store the last 'lineTag' from previous loop
-line_rodBLarc4 = lineTag
-
-# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-# # creation of the Surfaces # #
-# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-gmsh.model.geo.add_curve_loop([-line_rodConnect1, line_rodArc1, line_rodConnect2, -line_rodBLarc1], surfaceTag+1)
-gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
-gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
-gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
-surfaceTag = surfaceTag+1 
-surf_rodStruct1 = surfaceTag
-
-gmsh.model.geo.add_curve_loop([-line_rodConnect2, line_rodArc2, line_rodConnect3, -line_rodBLarc2], surfaceTag+1)
-gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
-gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
-gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
-surfaceTag = surfaceTag+1 
-surf_rodStruct2 = surfaceTag
-
-gmsh.model.geo.add_curve_loop([-line_rodConnect3, line_rodArc3, line_rodConnect4, -line_rodBLarc3], surfaceTag+1)
-gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
-gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
-gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
-surfaceTag = surfaceTag+1 
-surf_rodStruct3 = surfaceTag
-
-gmsh.model.geo.add_curve_loop([-line_rodConnect4, line_rodArc4, line_rodConnect1, -line_rodBLarc4], surfaceTag+1)
-gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
-gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
-gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
-surfaceTag = surfaceTag+1 
-surf_rodStruct4 = surfaceTag
-
+structTag = [pointTag, lineTag, surfaceTag]
+RodGeomSpec = [rodPos, rodR, rodBLwidth]
+RodGridPtsSpec = [gridPts_alongRod, gridPts_inRodBL, gridGeomProg_inRodBL]
+[pTL_rod, lTL_rod, sTL_rod, pointTag, lineTag, surfaceTag] = gmeshed_disk(structTag, RodGeomSpec, RodGridPtsSpec, rotMat, shiftVec)
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Creation of the exterior region # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+pRodCenter = 0
+pRod = 1
+pRodBL = 2
+lRodConn = 0
+lRodArc = 1
+lRodBL = 2
 
 x_min = - 3*chord
 x_max = 1.5*chord
@@ -232,20 +120,30 @@ y_minBUFF = - 1.5*chord
 y_maxBUFF = 1.5*chord
 elemSize_rectBUFF = chord/5
 
-[ rectLine, pointTag, lineTag] = gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag)
-[ rectLineBUFF, pointTag, lineTag] = gmeshed_rectangle_contour(x_minBUFF, x_maxBUFF, y_minBUFF, y_maxBUFF, elemSize_rectBUFF, pointTag, lineTag)
+[rectLine, pointTag, lineTag] = gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec)
+[rectLineBUFF, pointTag, lineTag] = gmeshed_rectangle_contour(x_minBUFF, x_maxBUFF, y_minBUFF, y_maxBUFF, elemSize_rectBUFF, pointTag, lineTag, rotMat, shiftVec)
 
-# gmsh.model.geo.add_curve_loop( [*rectLine, *bladeLine], surfaceTag+1) 
-# gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
-# gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
-# surfaceTag = surfaceTag+1
-# surf_unstr = surfaceTag
+gmsh.model.geo.add_curve_loop( [*rectLine, *bladeLine, *lTL_rod[lRodBL]], surfaceTag+1) 
+gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
+gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+surfaceTag = surfaceTag+1
+surf_unstr = surfaceTag
 
 gmsh.model.geo.add_curve_loop( [*rectLine, *rectLineBUFF], surfaceTag+1) 
 gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
 gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
 surfaceTag = surfaceTag+1
 surf_unstrBUFF = surfaceTag
+
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$
+# # Extrusion of the mesh # #
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+ExtrudOut = gmsh.model.geo.extrude([(pb_2Dim, 108),(pb_2Dim, 109)], 0, 0, span, [gridPts_alongSpan], recombine=True)
+# https://fenicsproject.org/olddocs/dolfinx/dev/python/demos/gmsh/demo_gmsh.py.html
+
+# ********** How to add symmetry bc ?? **********
+
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Generate visualise and export the mesh # #
@@ -258,23 +156,25 @@ gmsh.model.geo.synchronize()
 # 2D pavement
 # gmsh.option.setNumber("Mesh.Smoothing", 3)
 # gmsh.option.setNumber("Mesh.Algorithm", 11) # mesh 2D
-gmsh.option.setNumber("Mesh.RecombineAll", 1)
-gmsh.model.mesh.generate(2)
+# gmsh.option.setNumber("Mesh.RecombineAll", 1)
+
+gmsh.model.mesh.generate()
 
 # generating a high quality fully hex mesh is a tall order: 
 # https://gitlab.onelab.info/gmsh/gmsh/-/issues/784
 
-# # gmsh.option.setNumber('Mesh.Recombine3DLevel', 0)
-# # gmsh.option.setNumber("Mesh.NbTetrahedra", 0)
-# # gmsh.option.setNumber("Mesh.Algorithm3D", 4) # mesh 3D
+# gmsh.option.setNumber('Mesh.Recombine3DAll', 0)
+# gmsh.option.setNumber('Mesh.Recombine3DLevel', 0)
+# gmsh.option.setNumber("Mesh.NbTetrahedra", 0)
+# gmsh.option.setNumber("Mesh.Algorithm3D", 4) # mesh 3D
 
 # gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", 2) # most robust way to obtain pure hex mesh: subdivise it
 # # gmsh.option.setNumber('Mesh.RecombinationAlgorithm', 3) # perhaps better but conflict with transfinite mesh... to dig further
 
 # gmsh.model.mesh.generate()
 
-# gmsh.model.mesh.recombine()
 # gmsh.model.mesh.refine()
+# gmsh.model.mesh.recombine()
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Creation of the physical group # #

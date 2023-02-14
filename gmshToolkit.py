@@ -153,7 +153,7 @@ def NACAxxx(NACA_type, bluntTrailingEdge, AoA, chord, airfoilReference, height_L
 # ******************************************************************************************************************************************************************************
 # ******************************************************************************************************************************************************************************
 
-def rotationMatrix(rotAnglesVec):
+def rotationMatrix(rotAnglesVec): # rotation around axis [axisZ, axisY, axisX]
     yawRot = np.array([[np.cos(rotAnglesVec[0]*np.pi/180), -np.sin(rotAnglesVec[0]*np.pi/180), 0.0],
                        [np.sin(rotAnglesVec[0]*np.pi/180), np.cos(rotAnglesVec[0]*np.pi/180), 0.0],
                        [0.0, 0.0, 1.0]])
@@ -229,23 +229,23 @@ def gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec):
     # creation of the NACA profile
     point_TEu = pointTag+1
     for i in range(gridPts_alongNACA):
-        rotVec = np.matmul(rotMat, np.array([upper_NACAfoil[0,i], upper_NACAfoil[1,i], airfoilReferenceCoordinate[2]])) - shiftVec
+        rotVec = np.matmul(rotMat, np.array([upper_NACAfoil[0,i], upper_NACAfoil[1,i], airfoilReferenceCoordinate[2]])) + shiftVec
         gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], chord/100,pointTag+i+1)
     pointTag = pointTag+i+1 # store the last 'pointTag' from previous loop
     point_LE = pointTag
     if bluntTrailingEdge:
         for i in range(gridPts_alongNACA-1):
-            rotVec = np.matmul(rotMat, np.array([lower_NACAfoil[0,i], lower_NACAfoil[1,i], airfoilReferenceCoordinate[2]])) - shiftVec
+            rotVec = np.matmul(rotMat, np.array([lower_NACAfoil[0,i], lower_NACAfoil[1,i], airfoilReferenceCoordinate[2]])) + shiftVec
             gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], chord/100,pointTag+i+1)
         pointTag = pointTag+i+1 # store the last 'pointTag' from previous loop
         point_TEl = pointTag
-        rotVec = np.matmul(rotMat, np.array([0.5*(upper_NACAfoil[0,0]+lower_NACAfoil[0,-1]), 0.5*(upper_NACAfoil[1,0]+lower_NACAfoil[1,-1]), airfoilReferenceCoordinate[2]])) - shiftVec
+        rotVec = np.matmul(rotMat, np.array([0.5*(upper_NACAfoil[0,0]+lower_NACAfoil[0,-1]), 0.5*(upper_NACAfoil[1,0]+lower_NACAfoil[1,-1]), airfoilReferenceCoordinate[2]])) + shiftVec
         gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], chord/100,pointTag+1)
         pointTag = pointTag+1 # store the last 'pointTag' from previous loop
         point_TE = pointTag
     else:
         for i in range(gridPts_alongNACA-2):
-            rotVec = np.matmul(rotMat, np.array([lower_NACAfoil[0,i], lower_NACAfoil[1,i], airfoilReferenceCoordinate[2]])) - shiftVec
+            rotVec = np.matmul(rotMat, np.array([lower_NACAfoil[0,i], lower_NACAfoil[1,i], airfoilReferenceCoordinate[2]])) + shiftVec
             gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], chord/100,pointTag+i+1)
         pointTag = pointTag+i+1 # store the last 'pointTag' from previous loop
         point_TEl = point_TEu
@@ -254,12 +254,12 @@ def gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec):
     # creation of the offset layer
     point_up = pointTag+1
     for i in range(gridPts_alongNACA):
-        rotVec = np.matmul(rotMat, np.array([upper_offset[0,i], upper_offset[1,i], airfoilReferenceCoordinate[2]])) - shiftVec
+        rotVec = np.matmul(rotMat, np.array([upper_offset[0,i], upper_offset[1,i], airfoilReferenceCoordinate[2]])) + shiftVec
         gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], chord/100, pointTag+i+1)
     pointTag = pointTag+i+1 # store the last 'pointTag' from previous loop
     point_left = pointTag
     for i in range(gridPts_alongNACA-1):
-        rotVec = np.matmul(rotMat, np.array([lower_offset[0,i], lower_offset[1,i], airfoilReferenceCoordinate[2]])) - shiftVec
+        rotVec = np.matmul(rotMat, np.array([lower_offset[0,i], lower_offset[1,i], airfoilReferenceCoordinate[2]])) + shiftVec
         gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], chord/100, pointTag+i+1)
     pointTag = pointTag+i+1 # store the last 'pointTag' from previous loop
     point_low = pointTag
@@ -267,24 +267,24 @@ def gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec):
     # creation of the TEpatch
     point_lowRight = pointTag+1
     for i in range(np.size(x_TEpatch)):
-        rotVec = np.matmul(rotMat, np.array([x_TEpatch[i], y_TEpatch[i], airfoilReferenceCoordinate[2]])) - shiftVec
+        rotVec = np.matmul(rotMat, np.array([x_TEpatch[i], y_TEpatch[i], airfoilReferenceCoordinate[2]])) + shiftVec
         gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], chord/100, pointTag+i+1)
     pointTag = pointTag+i+1 # store the last 'pointTag' from previous loop
     point_upRight = pointTag
 
     point_lowFarRight = pointTag+1
     for i in range(np.size(x_wake)):
-        rotVec = np.matmul(rotMat, np.array([x_wake[i], y_wake[i], airfoilReferenceCoordinate[2]])) - shiftVec
+        rotVec = np.matmul(rotMat, np.array([x_wake[i], y_wake[i], airfoilReferenceCoordinate[2]])) + shiftVec
         gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], chord/100, pointTag+i+1)
     pointTag = pointTag+i+1 # store the last 'pointTag' from previous loop
     point_upFarRight = pointTag
 
-    rotVec = np.matmul(rotMat, np.array([0.5*(x_TEpatch[0]+x_TEpatch[-1]), 0.5*(y_TEpatch[0]+y_TEpatch[-1]), airfoilReferenceCoordinate[2]])) - shiftVec
+    rotVec = np.matmul(rotMat, np.array([0.5*(x_TEpatch[0]+x_TEpatch[-1]), 0.5*(y_TEpatch[0]+y_TEpatch[-1]), airfoilReferenceCoordinate[2]])) + shiftVec
     gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], chord/100, pointTag+1)
     pointTag = pointTag+1 # store the last 'pointTag' from previous loop
     point_TEwake = pointTag
 
-    rotVec = np.matmul(rotMat, np.array([0.5*(x_wake[0]+x_wake[-1]), 0.5*(y_wake[0]+y_wake[-1]), airfoilReferenceCoordinate[2]])) - shiftVec
+    rotVec = np.matmul(rotMat, np.array([0.5*(x_wake[0]+x_wake[-1]), 0.5*(y_wake[0]+y_wake[-1]), airfoilReferenceCoordinate[2]])) + shiftVec
     gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], chord/100, pointTag+1)
     pointTag = pointTag+1 # store the last 'pointTag' from previous loop
     point_TEfarWake = pointTag
@@ -304,14 +304,14 @@ def gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec):
 
         rotVec = np.matmul(rotMat, np.array([0.5*(1-alphaStretch)*x_TEpatch[-1]+0.5*(1+alphaStretch)*x_TEpatch[0], 
                                 0.5*(1-alphaStretch)*y_TEpatch[-1]+0.5*(1+alphaStretch)*y_TEpatch[0],
-                                airfoilReferenceCoordinate[2]])) - shiftVec
+                                airfoilReferenceCoordinate[2]])) + shiftVec
         gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], chord/100, pointTag+1)
         pointTag = pointTag+1 # store the last 'pointTag' from previous loop
         point_lowMidRight = pointTag
 
         rotVec = np.matmul(rotMat, np.array([0.5*(1-alphaStretch)*x_TEpatch[0]+0.5*(1+alphaStretch)*x_TEpatch[-1], 
                                 0.5*(1-alphaStretch)*y_TEpatch[0]+0.5*(1+alphaStretch)*y_TEpatch[-1],
-                                airfoilReferenceCoordinate[2]])) - shiftVec
+                                airfoilReferenceCoordinate[2]])) + shiftVec
         gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], chord/100, pointTag+1)
         pointTag = pointTag+1 # store the last 'pointTag' from previous loop
         point_upMidRight = pointTag
@@ -320,14 +320,14 @@ def gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec):
         
         rotVec = np.matmul(rotMat, np.array([0.5*(1-alphaStretch)*x_wake[-1]+0.5*(1+alphaStretch)*x_wake[0], 
                                 0.5*(1-alphaStretch)*y_wake[-1]+0.5*(1+alphaStretch)*y_wake[0],
-                                airfoilReferenceCoordinate[2]])) - shiftVec
+                                airfoilReferenceCoordinate[2]])) + shiftVec
         gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], chord/100, pointTag+1)
         pointTag = pointTag+1 # store the last 'pointTag' from previous loop
         point_lowMidFarRight = pointTag
 
         rotVec = np.matmul(rotMat, np.array([0.5*(1-alphaStretch)*x_wake[0]+0.5*(1+alphaStretch)*x_wake[-1], 
                                 0.5*(1-alphaStretch)*y_wake[0]+0.5*(1+alphaStretch)*y_wake[-1],
-                                airfoilReferenceCoordinate[2]])) - shiftVec
+                                airfoilReferenceCoordinate[2]])) + shiftVec
         gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], chord/100, pointTag+1)
         pointTag = pointTag+1 # store the last 'pointTag' from previous loop
         point_upMidFarRight = pointTag
@@ -666,6 +666,170 @@ def gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec):
 # ******************************************************************************************************************************************************************************
 # ******************************************************************************************************************************************************************************
 
+def gmeshed_disk(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec):
+
+    pointTag = structTag[0]
+    lineTag = structTag[1]
+    surfaceTag = structTag[2]
+
+    rodPos = GeomSpec[0]
+    rodR = GeomSpec[1]
+    rodBLwidth  = GeomSpec[2]
+
+    gridPts_alongRod = GridPtsSpec[0]
+    gridPts_inRodBL = GridPtsSpec[1]
+    gridGeomProg_inRodBL = GridPtsSpec[2]
+
+    shiftVec = np.array(shiftVec)
+
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$
+    # # creation of the Points # #
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+    rotVec = np.matmul(rotMat, np.array([rodPos[0], rodPos[1], rodPos[2]])) + shiftVec
+    gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], rodR/10, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_rodCenter = pointTag
+
+    rotVec = np.matmul(rotMat, np.array([rodPos[0]+rodR, rodPos[1], rodPos[2]])) + shiftVec
+    gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], rodR/10, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_rodPt1 = pointTag
+    rotVec = np.matmul(rotMat, np.array([rodPos[0], rodPos[1]+rodR, rodPos[2]])) + shiftVec
+    gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], rodR/10, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_rodPt2 = pointTag
+    rotVec = np.matmul(rotMat, np.array([rodPos[0]-rodR, rodPos[1], rodPos[2]])) + shiftVec
+    gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], rodR/10, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_rodPt3 = pointTag
+    rotVec = np.matmul(rotMat, np.array([rodPos[0], rodPos[1]-rodR, rodPos[2]])) + shiftVec
+    gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], rodR/10, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_rodPt4 = pointTag
+
+    rotVec = np.matmul(rotMat, np.array([rodPos[0]+rodR+rodBLwidth, rodPos[1], rodPos[2]])) + shiftVec
+    gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], rodR/10, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_rodBLpt1 = pointTag
+    rotVec = np.matmul(rotMat, np.array([rodPos[0], rodPos[1]+rodR+rodBLwidth, rodPos[2]])) + shiftVec
+    gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], rodR/10, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_rodBLpt2 = pointTag
+    rotVec = np.matmul(rotMat, np.array([rodPos[0]-rodR-rodBLwidth, rodPos[1], rodPos[2]])) + shiftVec
+    gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], rodR/10, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_rodBLpt3 = pointTag
+    rotVec = np.matmul(rotMat, np.array([rodPos[0], rodPos[1]-rodR-rodBLwidth, rodPos[2]])) + shiftVec
+    gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], rodR/10, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_rodBLpt4 = pointTag
+
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$
+    # # creation of the Lines # #
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+    gmsh.model.geo.add_line(point_rodPt1, point_rodBLpt1, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_inRodBL, "Progression", gridGeomProg_inRodBL)
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_rodConnect1 = lineTag
+    gmsh.model.geo.add_line(point_rodPt2, point_rodBLpt2, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_inRodBL, "Progression", gridGeomProg_inRodBL)
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_rodConnect2 = lineTag
+    gmsh.model.geo.add_line(point_rodPt3, point_rodBLpt3, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_inRodBL, "Progression", gridGeomProg_inRodBL)
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_rodConnect3 = lineTag
+    gmsh.model.geo.add_line(point_rodPt4, point_rodBLpt4, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_inRodBL, "Progression", gridGeomProg_inRodBL)
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_rodConnect4 = lineTag
+
+    gmsh.model.geo.addCircleArc(point_rodPt1, point_rodCenter, point_rodPt2, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_rodArc1 = lineTag
+    gmsh.model.geo.addCircleArc(point_rodPt2, point_rodCenter, point_rodPt3, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_rodArc2 = lineTag
+    gmsh.model.geo.addCircleArc(point_rodPt3, point_rodCenter, point_rodPt4, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_rodArc3 = lineTag
+    gmsh.model.geo.addCircleArc(point_rodPt4, point_rodCenter, point_rodPt1, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_rodArc4 = lineTag
+
+    gmsh.model.geo.addCircleArc(point_rodBLpt1, point_rodCenter, point_rodBLpt2, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_rodBLarc1 = lineTag
+    gmsh.model.geo.addCircleArc(point_rodBLpt2, point_rodCenter, point_rodBLpt3, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_rodBLarc2 = lineTag
+    gmsh.model.geo.addCircleArc(point_rodBLpt3, point_rodCenter, point_rodBLpt4, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_rodBLarc3 = lineTag
+    gmsh.model.geo.addCircleArc(point_rodBLpt4, point_rodCenter, point_rodBLpt1, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, gridPts_alongRod)
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_rodBLarc4 = lineTag
+
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+    # # creation of the Surfaces # #
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+    gmsh.model.geo.add_curve_loop([-line_rodConnect1, line_rodArc1, line_rodConnect2, -line_rodBLarc1], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_rodStruct1 = surfaceTag
+
+    gmsh.model.geo.add_curve_loop([-line_rodConnect2, line_rodArc2, line_rodConnect3, -line_rodBLarc2], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_rodStruct2 = surfaceTag
+
+    gmsh.model.geo.add_curve_loop([-line_rodConnect3, line_rodArc3, line_rodConnect4, -line_rodBLarc3], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_rodStruct3 = surfaceTag
+
+    gmsh.model.geo.add_curve_loop([-line_rodConnect4, line_rodArc4, line_rodConnect1, -line_rodBLarc4], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_rodStruct4 = surfaceTag
+
+
+    pRod = [point_rodPt1, point_rodPt2, point_rodPt3, point_rodPt4]
+    pRodBL = [point_rodBLpt1, point_rodBLpt2, point_rodBLpt3, point_rodBLpt4]
+    
+    lRodConnect = [line_rodConnect1, line_rodConnect2, line_rodConnect3, line_rodConnect4]
+    lRodArc = [line_rodArc1, line_rodArc2, line_rodArc3, line_rodArc4]
+    lRodBL = [line_rodBLarc1, line_rodBLarc2, line_rodBLarc3, line_rodBLarc4]
+
+    pointTag_list = [point_rodCenter, [*pRod], [*pRodBL]]
+    lineTag_list = [[*lRodConnect], [*lRodArc], [*lRodBL]]
+    surfaceTag_list = [surf_rodStruct1, surf_rodStruct2, surf_rodStruct3, surf_rodStruct4]
+
+    return pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag
+
+
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
 
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -1106,8 +1270,6 @@ def gmeshed_blade_ts(lTS, tlTS, gridPts_alongNACA, radii_step, bluntTrailingEdge
 # ******************************************************************************************************************************************************************************
 # ******************************************************************************************************************************************************************************
 
-
-
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # creation of the volumes # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -1315,7 +1477,6 @@ def gmeshed_blade_vol(sTS, tsTS, gridPts_alongNACA, radii_step, bluntTrailingEdg
         vol_wakeMidUp = [-1]
         vol_wakeMidLow = [-1]
 
-
     volumeTag_list = [[*vol_BL], [*vol_wakeUp], [*vol_wakeLow], [*vol_wakeMidUp], [*vol_wakeMidLow], [*vol_TEpatchUp], [*vol_TEpatchLow], [*vol_TEpatchMidUp], [*vol_TEpatchMidLow]]
 
     return volumeTag_list, volumeTag
@@ -1487,7 +1648,7 @@ def gmeshed_bladeTip_ts(pTS_slice, lTS_slice, GeomSpec, GridPtsSpec, rotMat, shi
     # take into account the blade 3D rotation to define the tip connection
     bladeShiftVec = shiftVec
     airfoilReferenceCoordinate = GeomSpec[6]
-    shiftVec = np.matmul(rotMat, np.array([airfoilReferenceCoordinate[0], airfoilReferenceCoordinate[1], -airfoilReferenceCoordinate[2]])) + bladeShiftVec
+    shiftVec = -np.matmul(rotMat, np.array([airfoilReferenceCoordinate[0], airfoilReferenceCoordinate[1], -airfoilReferenceCoordinate[2]])) + bladeShiftVec
     GeomSpec[6] = [0.0, 0.0, 0.0] # airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
     # rotMat = np.matmul(rotMat, rotationMatrix([-pitch, -pitch, 90.0])) # angles in degree
     rotMat = np.matmul(rotMat, rotationMatrix([-pitch, pitch, -90.0])) # angles in degree
@@ -2422,22 +2583,28 @@ def gmeshed_cylinder_surf(y_min_cyl, y_max_cyl, r_cyl, elemSize_cyl, pointTag, l
 # ******************************************************************************************************************************************************************************
 # ******************************************************************************************************************************************************************************
 
-def gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag):
+def gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec):
+
+    shiftVec = np.array(shiftVec)
 
     # $$$$$$$$$$$$$$$$$$$$$$$$$$$$
     # # creation of the Points # #
     # $$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-    gmsh.model.geo.addPoint(x_min, y_min, 0.0, elemSize_rect, pointTag+1)
+    rotVec = np.matmul(rotMat, np.array([x_min, y_min, 0.0])) + shiftVec
+    gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], elemSize_rect, pointTag+1)
     pointTag = pointTag+1 
     point_SW = pointTag
-    gmsh.model.geo.addPoint(x_max, y_min, 0.0, elemSize_rect, pointTag+1)
+    rotVec = np.matmul(rotMat, np.array([x_max, y_min, 0.0])) + shiftVec
+    gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], elemSize_rect, pointTag+1)
     pointTag = pointTag+1
     point_SE = pointTag
-    gmsh.model.geo.addPoint(x_max, y_max, 0.0, elemSize_rect, pointTag+1)
+    rotVec = np.matmul(rotMat, np.array([x_max, y_max, 0.0])) + shiftVec
+    gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], elemSize_rect, pointTag+1)
     pointTag = pointTag+1
     point_NE = pointTag
-    gmsh.model.geo.addPoint(x_min, y_max, 0.0, elemSize_rect, pointTag+1)
+    rotVec = np.matmul(rotMat, np.array([x_min, y_max, 0.0])) + shiftVec
+    gmsh.model.geo.addPoint(rotVec[0], rotVec[1], rotVec[2], elemSize_rect, pointTag+1)
     pointTag = pointTag+1
     point_NW = pointTag
 

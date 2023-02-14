@@ -9,12 +9,12 @@ import shutil
 
 NACA_type = '4412'
 
-geometry_file = "VP1304_geom" # "VP1304_geom" , "SP2_geom"
+geometry_file = "SP2_geom" # "VP1304_geom" , "SP2_geom"
 
 bluntTrailingEdge = True
 optimisedGridSpacing = False
 
-gridPts_alongNACA = 10
+gridPts_alongNACA = 4
 
 gridPts_inBL = 5 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
@@ -84,7 +84,7 @@ volumeTag = 0
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 # Creation of blade number 1 ***   ***   ***
-rotMat = rotationMatrix([0.0, 0.0, 0.0]) # angles in degree
+rotMat = rotationMatrix([0.0, 0.0, 0.0]) # angles in degree around [axisZ, axisY, axisX]
 shiftVec = [0.0, 0.0, 0.0]
 for i in range(len(radii_vec)):
 
@@ -110,7 +110,7 @@ for i in range(len(radii_vec)):
 
 
 # Creation of blade number 2 ***   ***   ***
-rotMat = rotationMatrix([180.0, 0.0, 180.0]) # angles in degree
+rotMat = rotationMatrix([180.0, 0.0, 180.0]) # angles in degree around [axisZ, axisY, axisX]
 
 for i in range(len(radii_vec)):
 
