@@ -11,22 +11,22 @@ import shutil
 
 NACA_type = '4412'
 
-bluntTrailingEdge = False
+bluntTrailingEdge = True
 optimisedGridSpacing = True
 
 gridPts_alongNACA = 50
 
-gridPts_alongSpan = 10
+gridPts_alongSpan = 30
 
 gridPts_inBL = 30 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
 TEpatchGridFlaringAngle = 0 # deg
-gridPts_alongTEpatch = 5 # > 2 for split into fully hex mesh
+gridPts_alongTEpatch = 30 # > 2 for split into fully hex mesh
 gridGeomProg_alongTEpatch = 1.05
 
 wakeGridFlaringAngle = 0 # deg
-gridPts_alongWake = 3 # > 2 for split into fully hex mesh
+gridPts_alongWake = 30 # > 2 for split into fully hex mesh
 gridGeomProg_alongWake = 1.0
 
 pitch = 20.0 # deg
@@ -89,7 +89,7 @@ rodElemSize = 0.02*chord
 rodBLwidth = 0.05*chord
 
 gridPts_alongRod = int(2*np.pi*rodR/rodElemSize/4)
-gridPts_inRodBL = 5
+gridPts_inRodBL = 10
 gridGeomProg_inRodBL = 1.1
 
 structTag = [pointTag, lineTag, surfaceTag]
@@ -127,7 +127,7 @@ gmsh.model.geo.add_curve_loop( [*rectLine, *bladeLine, *lTL_rod[lRodBL]], surfac
 gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
 gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
 surfaceTag = surfaceTag+1
-surf_unstr = surfaceTag
+surf_unstructCFD = surfaceTag
 
 gmsh.model.geo.add_curve_loop( [*rectLine, *rectLineBUFF], surfaceTag+1) 
 gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
@@ -139,7 +139,69 @@ surf_unstrBUFF = surfaceTag
 # # Extrusion of the mesh # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-ExtrudOut = gmsh.model.geo.extrude([(pb_2Dim, 108),(pb_2Dim, 109)], 0, 0, span, [gridPts_alongSpan], recombine=True)
+sairfoil = 0
+sBLstructGrid = 1
+sBLstructGridUp = 2
+sBLstructGridLow = 3
+sTEpatchUp = 4
+sTEpatchLow = 5
+sTEpatchMidUp = 6
+sTEpatchMidLow = 7
+swakeUp = 8
+swakeLow = 9
+swakeMidUp = 10
+swakeMidLow = 11
+
+### Extrude rod BL
+rodBLdoublet = []
+for elem in sTL_rod:
+    rodBLdoublet.append((pb_2Dim,elem))
+ExtrudRodBL = gmsh.model.geo.extrude(rodBLdoublet, 0, 0, span, [gridPts_alongSpan], recombine=True)
+
+# Extract volume tags of rod BL
+ExtrudRodBL_vol = []
+for i in range(len(ExtrudRodBL)):
+    if ExtrudRodBL[i][0] == 3:  
+        ExtrudRodBL_vol.append(ExtrudRodBL[i][1])
+
+### Extrude struct Airfoil
+airfoilStructDoublet = []
+for elem in sTL_airfoil:
+    if isinstance(elem, int): 
+        if not(elem==sTL_airfoil[sairfoil]) and not(elem==-1): # in order not to extrude the airfoil interior and the empty tags
+            airfoilStructDoublet.append((pb_2Dim,elem))
+    else:
+        if not(elem==sTL_airfoil[sBLstructGrid]): # in order not to generate twice the elemenst of the unstruct BL grid 
+            for subElem in elem:
+                airfoilStructDoublet.append((pb_2Dim,subElem))
+ExtrudAirfoildStruct = gmsh.model.geo.extrude(airfoilStructDoublet, 0, 0, span, [gridPts_alongSpan], recombine=True)
+
+# Extract volume tags of struct Airfoil
+ExtrudAirfoildStruct_vol = []
+for i in range(len(ExtrudAirfoildStruct)):
+    if ExtrudAirfoildStruct[i][0] == 3:  
+        ExtrudAirfoildStruct_vol.append(ExtrudAirfoildStruct[i][1])
+
+### Extrude unstructCFD domain
+ExtrudUnstructCFD = gmsh.model.geo.extrude([(pb_2Dim, surf_unstructCFD)], 0, 0, span, [gridPts_alongSpan], recombine=True)
+
+# Extract volume tags of unstruct CFD
+ExtrudUnstructCFD_vol = []
+for i in range(len(ExtrudUnstructCFD)):
+    if ExtrudUnstructCFD[i][0] == 3:  
+        ExtrudUnstructCFD_vol.append(ExtrudUnstructCFD[i][1])
+
+### Extrude unstructBUFF domain
+ExtrudUnstructBUFF = gmsh.model.geo.extrude([(pb_2Dim, surf_unstrBUFF)], 0, 0, span, [gridPts_alongSpan], recombine=True)
+
+# Extract volume tags of unstruct CFD
+ExtrudUnstructBUFF_vol = []
+for i in range(len(ExtrudUnstructBUFF)):
+    if ExtrudUnstructBUFF[i][0] == 3:  
+        ExtrudUnstructBUFF_vol.append(ExtrudUnstructBUFF[i][1])
+
+volMesh = [*ExtrudRodBL_vol, *ExtrudAirfoildStruct_vol, *ExtrudUnstructCFD_vol, *ExtrudUnstructBUFF_vol]
+
 # https://fenicsproject.org/olddocs/dolfinx/dev/python/demos/gmsh/demo_gmsh.py.html
 
 # ********** How to add symmetry bc ?? **********
@@ -183,15 +245,21 @@ gmsh.model.mesh.generate()
 # Create the relevant Gmsh data structures from Gmsh model.
 gmsh.model.geo.synchronize()
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*structGridSurf], 1, "CFD") # physical surface
-gmsh.model.addPhysicalGroup(pb_2Dim, [surf_unstrBUFF], 2, "Buff") # physical surface
+# gmsh.model.addPhysicalGroup(pb_2Dim, [*structGridSurf], 1, "CFD") # physical surface
+
+GMSHvolumeTag = 0
+for volBeat in volMesh:
+    GMSHvolumeTag = GMSHvolumeTag + 1
+    gmsh.model.addPhysicalGroup(pb_3Dim, [volBeat], GMSHvolumeTag, "Extruded Grid") # physical volume
 
 [nodePerEntity, elemPerEntity] = countDOF()
 
 # Write mesh data:
 gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is selected "Mesh.SaveAll=1" discards the group definitions (to be avoided!).
 
-gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.msh")
+gmsh.write("Rod_NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.msh")
+gmsh.write("Rod_NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.vtk")
+
 
 # delete the "__pycache__" folder:
 try:
