@@ -9,7 +9,7 @@ import shutil
 
 NACA_type = '4412'
 
-geometry_file = "SP2_geom" # "VP1304_geom" , "SP2_geom"
+geometry_file = "VP1304_geom" # "VP1304_geom" , "SP2_geom"
 
 bluntTrailingEdge = True
 optimisedGridSpacing = False
@@ -159,12 +159,12 @@ vol_blade_2 = returnStructGridVol(vTS2,vTS_tip2,  bluntTrailingEdge)
 
 y_max_cyl1 = 0.02
 y_min_cyl1 = -0.03
-r_cyl1 = 0.125
+r_cyl1 = 0.2 # 0.125
 elemSize_cyl1 = 0.0025
 
 y_max_cyl2 = 0.075
 y_min_cyl2 = -0.15
-r_cyl2 = 0.2
+r_cyl2 = 0.3 # 0.2
 elemSize_cyl2 = 0.01
 
 [ cylSurf1, pointTag, lineTag, surfaceTag] = gmeshed_cylinder_surf(y_min_cyl1, y_max_cyl1, r_cyl1, elemSize_cyl1, pointTag, lineTag, surfaceTag)
@@ -207,7 +207,7 @@ gmsh.model.geo.synchronize()
 gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", 2) # most robust way to obtain pure hex mesh: subdivise it
 # gmsh.option.setNumber('Mesh.RecombinationAlgorithm', 3) # perhaps better but conflict with transfinite mesh... to dig further
 
-gmsh.model.mesh.generate(2)
+gmsh.model.mesh.generate(3)
 
 # gmsh.model.mesh.recombine()
 # gmsh.model.mesh.refine()
