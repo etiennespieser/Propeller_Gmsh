@@ -2162,10 +2162,10 @@ def returnStructGridSide(sTS, bluntTrailingEdge):
 
     #               ~       ~       ~
 
-    sStructGridSide = []
-    sStructGridSide.extend([*sTS[sBLstructGrid], sTS[sTEpatchUp], sTS[sTEpatchLow], sTS[swakeUp], sTS[swakeLow] ])
-    if bluntTrailingEdge:
-        sStructGridSide.extend([sTS[sTEpatchMidUp], sTS[sTEpatchMidLow], sTS[swakeMidUp], sTS[swakeMidLow]])
+    if bluntTrailingEdge: # Watch out for the order of the list outputed.. When creating extrusion and periodic BC, patch need to correspond !
+        sStructGridSide = [*sTS[sBLstructGrid], sTS[sTEpatchUp], sTS[sTEpatchLow], sTS[sTEpatchMidUp], sTS[sTEpatchMidLow], sTS[swakeUp], sTS[swakeLow], sTS[swakeMidUp], sTS[swakeMidLow]]
+    else:
+        sStructGridSide = [*sTS[sBLstructGrid], sTS[sTEpatchUp], sTS[sTEpatchLow], sTS[swakeUp], sTS[swakeLow] ]
 
     return sStructGridSide
 
@@ -2630,6 +2630,151 @@ def gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTa
     line_W = lineTag
 
     return [line_S, line_E, line_N, line_W], pointTag, lineTag
+
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+
+def extrude_rodBL(sTL_rod, span, gridPts_alongSpan):
+
+    ### Extrude rod BL
+    rodBLdoublet = []
+    for elem in sTL_rod:
+        rodBLdoublet.append((pb_2Dim,elem))
+    ExtrudRodBL = gmsh.model.geo.extrude(rodBLdoublet, 0, 0, span, [gridPts_alongSpan], recombine=True)
+
+    # Extract volume tags of rod BL
+    ExtrudRodBL_vol = []
+    for i in range(len(ExtrudRodBL)):
+        if ExtrudRodBL[i][0] == 3:  
+            ExtrudRodBL_vol.append(ExtrudRodBL[i][1])
+
+    # Extract surface tags of rod BL
+    ExtrudRodBL_skin = []
+    ExtrudRodBL_symFace = []
+    # ExtrudRodBL_rodBLouterSkin = []
+    for i in range(len(ExtrudRodBL)):
+        if ExtrudRodBL[i][0] == 3:  
+            ExtrudRodBL_symFace.append(ExtrudRodBL[i-1][1]) # Rod BL extruded periodic face
+            ExtrudRodBL_skin.append(ExtrudRodBL[i+2][1]) # Rod cylinder skin
+            # ExtrudRodBL_rodBLouterSkin.append(ExtrudRodBL[i+4][1]) # Rod BL connection to unstruct CFD mesh
+
+    return ExtrudRodBL_vol, ExtrudRodBL_symFace, ExtrudRodBL_skin
+
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+
+def extrude_airfoilStruct(sTL_airfoil, bluntTrailingEdge, gridPts_alongNACA, span, gridPts_alongSpan):
+
+    sairfoil = 0
+    sBLstructGrid = 1
+    sBLstructGridUp = 2
+    sBLstructGridLow = 3
+    sTEpatchUp = 4
+    sTEpatchLow = 5
+    sTEpatchMidUp = 6
+    sTEpatchMidLow = 7
+    swakeUp = 8
+    swakeLow = 9
+    swakeMidUp = 10
+    swakeMidLow = 11
+
+    ### Extrude struct Airfoil
+    airfoilStructDoublet = []
+    for elem in sTL_airfoil:
+        if isinstance(elem, int): 
+            if not(elem==sTL_airfoil[sairfoil]) and not(elem==-1): # in order not to extrude the airfoil interior and the empty tags
+                airfoilStructDoublet.append((pb_2Dim,elem))
+        else:
+            if not(elem==sTL_airfoil[sBLstructGrid]): # in order not to generate twice the elemenst of the unstruct BL grid 
+                for subElem in elem:
+                    airfoilStructDoublet.append((pb_2Dim,subElem))
+    ExtrudAirfoildStruct = gmsh.model.geo.extrude(airfoilStructDoublet, 0, 0, span, [gridPts_alongSpan], recombine=True)
+
+    # Extract volume tags of struct Airfoil
+    ExtrudAirfoildStruct_vol = []
+    for i in range(len(ExtrudAirfoildStruct)):
+        if ExtrudAirfoildStruct[i][0] == 3:  
+            ExtrudAirfoildStruct_vol.append(ExtrudAirfoildStruct[i][1])
+
+    # Extract surface tags of struct Airfoil
+    ExtrudStructAirfoil_skin = []
+    ExtrudStructAirfoil_symFace = []
+    for i in range(len(ExtrudAirfoildStruct)):
+        if ExtrudAirfoildStruct[i][0] == 3:  
+            ExtrudStructAirfoil_symFace.append(ExtrudAirfoildStruct[i-1][1]) # Struct Airfoil extruded periodic face
+    for i in range((2*gridPts_alongNACA-2)*6):
+        if ExtrudAirfoildStruct[i][0] == 3:  
+            ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[i+3][1]) # Airfoil skin
+    if bluntTrailingEdge:
+        ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[(2*gridPts_alongNACA-2)*6+17][1]) # Addition of the trailing edge surfaces
+        ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[(2*gridPts_alongNACA-2)*6+23][1]) # Addition of the trailing edge surfaces
+
+
+    return ExtrudAirfoildStruct_vol, ExtrudStructAirfoil_symFace, ExtrudStructAirfoil_skin
+
+
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+
+def extrude_unstructCFD(surf_unstructCFD, span, gridPts_alongSpan):
+
+    ### Extrude unstructCFD domain
+    ExtrudUnstructCFD = gmsh.model.geo.extrude([(pb_2Dim, surf_unstructCFD)], 0, 0, span, [gridPts_alongSpan], recombine=True)
+
+    # Extract volume tags of unstruct CFD
+    ExtrudUnstructCFD_vol = []
+    for i in range(len(ExtrudUnstructCFD)):
+        if ExtrudUnstructCFD[i][0] == 3:  
+            ExtrudUnstructCFD_vol.append(ExtrudUnstructCFD[i][1])
+
+    # Extract surface tags of unstruct CFD
+    ExtrudUnstructCFD_symFace = []
+    ExtrudUnstructCFD_symFace.append(ExtrudUnstructCFD[0][1]) # unstruct CFD extruded periodic face
+    # ExtrudUnstructCFD_outerSkin = []
+    # ExtrudUnstructCFD_outerSkin.append(ExtrudUnstructCFD[2][1]) # untruct CFD junction with BUFF
+    # ExtrudUnstructCFD_outerSkin.append(ExtrudUnstructCFD[3][1]) # untruct CFD junction with BUFF
+    # ExtrudUnstructCFD_outerSkin.append(ExtrudUnstructCFD[4][1]) # untruct CFD junction with BUFF
+    # ExtrudUnstructCFD_outerSkin.append(ExtrudUnstructCFD[5][1]) # untruct CFD junction with BUFF
+
+    return ExtrudUnstructCFD_vol, ExtrudUnstructCFD_symFace
+
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+
+def extrude_unstructBUFF(surf_unstructBUFF, span, gridPts_alongSpan):
+
+    ### Extrude unstructBUFF domain
+    ExtrudUnstructBUFF = gmsh.model.geo.extrude([(pb_2Dim, surf_unstructBUFF)], 0, 0, span, [gridPts_alongSpan], recombine=True)
+    
+    # Extract volume tags of unstruct BUFF
+    ExtrudUnstructBUFF_vol = []
+    for i in range(len(ExtrudUnstructBUFF)):
+        if ExtrudUnstructBUFF[i][0] == 3:  
+            ExtrudUnstructBUFF_vol.append(ExtrudUnstructBUFF[i][1])
+    
+    # Extract surface tags of unstruct BUFF
+    ExtrudUnstructBUFF_symFace = []
+    ExtrudUnstructBUFF_symFace.append(ExtrudUnstructBUFF[0][1]) # unstruct CFD extruded periodic face
+    ExtrudUnstructBUFF_innerSkin = []
+    ExtrudUnstructBUFF_innerSkin.append(ExtrudUnstructBUFF[2][1]) # untruct CFD junction with BUFF
+    ExtrudUnstructBUFF_innerSkin.append(ExtrudUnstructBUFF[3][1]) # untruct CFD junction with BUFF
+    ExtrudUnstructBUFF_innerSkin.append(ExtrudUnstructBUFF[4][1]) # untruct CFD junction with BUFF
+    ExtrudUnstructBUFF_innerSkin.append(ExtrudUnstructBUFF[5][1]) # untruct CFD junction with BUFF
+    ExtrudUnstructBUFF_bottom = []
+    ExtrudUnstructBUFF_bottom.append(ExtrudUnstructBUFF[6][1]) # untruct CFD junction with BUFF
+    ExtrudUnstructBUFF_outlet = []
+    ExtrudUnstructBUFF_outlet.append(ExtrudUnstructBUFF[7][1]) # untruct CFD junction with BUFF
+    ExtrudUnstructBUFF_top = []
+    ExtrudUnstructBUFF_top.append(ExtrudUnstructBUFF[8][1]) # untruct CFD junction with BUFF
+    ExtrudUnstructBUFF_inlet = []
+    ExtrudUnstructBUFF_inlet.append(ExtrudUnstructBUFF[9][1]) # untruct CFD junction with BUFF
+    
+    return ExtrudUnstructBUFF_vol, ExtrudUnstructBUFF_symFace, ExtrudUnstructBUFF_innerSkin, [ExtrudUnstructBUFF_inlet, ExtrudUnstructBUFF_bottom, ExtrudUnstructBUFF_outlet, ExtrudUnstructBUFF_top]
+
 
 # ******************************************************************************************************************************************************************************
 # ******************************************************************************************************************************************************************************
