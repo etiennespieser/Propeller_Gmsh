@@ -11,7 +11,7 @@ NACA_type = '4412'
 
 geometry_file = "VP1304_geom" # "VP1304_geom" , "SP2_geom"
 
-bluntTrailingEdge = True
+bluntTrailingEdge = False
 optimisedGridSpacing = False
 
 gridPts_alongNACA = 4
@@ -63,7 +63,6 @@ gmsh.initialize()
 # # https://gitlab.onelab.info/gmsh/gmsh/-/issues/1436 
 # # https://gitlab.onelab.info/gmsh/gmsh/-/issues/1093 
 # # https://gitlab.onelab.info/gmsh/gmsh/-/issues/1422
-
 
 
 pTS1 = [] # pointTag_struct -- blade 1
@@ -157,15 +156,27 @@ vol_blade_2 = returnStructGridVol(vTS2,vTS_tip2,  bluntTrailingEdge)
 # # Creation of the cylindrical volumes # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-y_max_cyl1 = 0.02
-y_min_cyl1 = -0.03
-r_cyl1 = 0.2 # 0.125
-elemSize_cyl1 = 0.0025
+if geometry_file == "VP1304_geom" :
+    y_max_cyl1 = 0.15
+    y_min_cyl1 = -0.15
+    r_cyl1 = 0.3
+    elemSize_cyl1 = 0.01
 
-y_max_cyl2 = 0.075
-y_min_cyl2 = -0.15
-r_cyl2 = 0.3 # 0.2
-elemSize_cyl2 = 0.01
+    y_max_cyl2 = 0.3
+    y_min_cyl2 = -0.3
+    r_cyl2 = 0.5
+    elemSize_cyl2 = 0.02
+
+elif geometry_file == "SP2_geom":
+    y_max_cyl1 = 0.02
+    y_min_cyl1 = -0.03
+    r_cyl1 = 0.125
+    elemSize_cyl1 = 0.0025
+
+    y_max_cyl2 = 0.075
+    y_min_cyl2 = -0.15
+    r_cyl2 = 0.2
+    elemSize_cyl2 = 0.01
 
 [ cylSurf1, pointTag, lineTag, surfaceTag] = gmeshed_cylinder_surf(y_min_cyl1, y_max_cyl1, r_cyl1, elemSize_cyl1, pointTag, lineTag, surfaceTag)
 [ cylSurf2, pointTag, lineTag, surfaceTag] = gmeshed_cylinder_surf(y_min_cyl2, y_max_cyl2, r_cyl2, elemSize_cyl2, pointTag, lineTag, surfaceTag)
@@ -222,14 +233,14 @@ gmsh.model.geo.synchronize()
 GMSHvolumeTag = 0
 for volBeat in [*vol_blade_1, *vol_blade_2]:
     GMSHvolumeTag = GMSHvolumeTag + 1
-    gmsh.model.addPhysicalGroup(pb_3Dim, volBeat, GMSHvolumeTag, "Struct Grid volume 1") # physical volume
+    gmsh.model.addPhysicalGroup(pb_3Dim, volBeat, GMSHvolumeTag, "Struct Grid volume 1")
 
-gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucCFD], GMSHvolumeTag+1, "BL volume") # physical volume
-gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucBUFF], GMSHvolumeTag+2, "BL volume") # physical volume
+gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucCFD], GMSHvolumeTag+1, "BL volume")
+gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucBUFF], GMSHvolumeTag+2, "BL volume")
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin1], 11, "BL volume") # physical surface
-# gmsh.model.addPhysicalGroup(pb_2Dim, [*sStructGridSkin1], 12, "BL volume") # physical surface
-gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin2], 13, "BL volume") # physical surface
+# gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin1], 11, "BL volume")
+# # gmsh.model.addPhysicalGroup(pb_2Dim, [*sStructGridSkin1], 12, "BL volume")
+# gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin2], 13, "BL volume")
 
 
 [nodePerEntity, elemPerEntity] = countDOF()

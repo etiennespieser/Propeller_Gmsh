@@ -2829,12 +2829,13 @@ def read_geometry(geometry_file):
 
     datafile.close()
 
-    # add a last section to model the tip termination
-    radii_vec.append(radii_vec[-1]+chord_vec[-1]/4)
-    chord_vec.append(chord_vec[-1]*0.7)
-    twist_vec.append(twist_vec[-1])
-    rake_vec.append(rake_vec[-1])
-    skew_vec.append(skew_vec[-1]+0.1*skew_vec[-1])
+    # if geometry_file == "SP2_geom.dat":
+    #     # add a last section to model the tip termination
+    #     radii_vec.append(radii_vec[-1]+chord_vec[-1]/4)
+    #     chord_vec.append(chord_vec[-1]*0.7)
+    #     twist_vec.append(twist_vec[-1])
+    #     rake_vec.append(rake_vec[-1])
+    #     skew_vec.append(skew_vec[-1]+0.1*skew_vec[-1])
 
 
     return np.array(radii_vec), np.array(chord_vec), np.array(twist_vec), np.array(rake_vec), np.array(skew_vec)
