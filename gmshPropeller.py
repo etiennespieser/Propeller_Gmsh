@@ -12,7 +12,6 @@ NACA_type = '4412'
 geometry_file = "SP2_geom" # "VP1304_geom" , "SP2_geom" from https://doi.org/10.1063/5.0098891
 
 bluntTrailingEdge = False
-optimisedGridSpacing = False
 
 gridPts_alongNACA = 4
 
@@ -88,7 +87,7 @@ shiftVec = [0.0, 0.0, 0.0]
 for i in range(len(radii_vec)):
 
     structTag = [pointTag, lineTag, surfaceTag]
-    GeomSpec = [NACA_type, bluntTrailingEdge, optimisedGridSpacing, pitch_vecAngle[i], chord_vec[i], airfoilReferenceAlongChord_c*chord_vec[i], airfoilReferenceCoordinate[i], height_LE_c*chord_vec[i], height_TE_c*chord_vec[i], TEpatchLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), TEpatchGridFlaringAngle, wakeLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), wakeGridFlaringAngle]
+    GeomSpec = [NACA_type, bluntTrailingEdge, pitch_vecAngle[i], chord_vec[i], airfoilReferenceAlongChord_c*chord_vec[i], airfoilReferenceCoordinate[i], height_LE_c*chord_vec[i], height_TE_c*chord_vec[i], TEpatchLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), TEpatchGridFlaringAngle, wakeLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), wakeGridFlaringAngle]
     GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
 
     if i == len(radii_vec)-1:
@@ -114,7 +113,7 @@ rotMat = rotationMatrix([180.0, 0.0, 180.0]) # angles in degree around [axisZ, a
 for i in range(len(radii_vec)):
 
     structTag = [pointTag, lineTag, surfaceTag]
-    GeomSpec = [NACA_type, bluntTrailingEdge, optimisedGridSpacing, pitch_vecAngle[i], chord_vec[i], airfoilReferenceAlongChord_c*chord_vec[i], airfoilReferenceCoordinate[i], height_LE_c*chord_vec[i], height_TE_c*chord_vec[i], TEpatchLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), TEpatchGridFlaringAngle, wakeLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), wakeGridFlaringAngle]
+    GeomSpec = [NACA_type, bluntTrailingEdge, pitch_vecAngle[i], chord_vec[i], airfoilReferenceAlongChord_c*chord_vec[i], airfoilReferenceCoordinate[i], height_LE_c*chord_vec[i], height_TE_c*chord_vec[i], TEpatchLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), TEpatchGridFlaringAngle, wakeLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), wakeGridFlaringAngle]
     GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
 
     if i == len(radii_vec)-1:
@@ -158,7 +157,7 @@ vol_blade_2 = returnStructGridVol(vTS2,vTS_tip2,  bluntTrailingEdge)
 
 if geometry_file == "VP1304_geom" :
     y_max_cyl1 = 0.15
-    y_min_cyl1 = -0.15
+    y_min_cyl1 = -0.2
     r_cyl1 = 0.3
     elemSize_cyl1 = 0.01
 

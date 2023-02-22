@@ -13,7 +13,6 @@ NACA_type = '4412'
 CONF = 'airfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = False
-optimisedGridSpacing = False
 
 gridPts_alongNACA = 80
 
@@ -63,7 +62,7 @@ if not (CONF == 'rod'):
     airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
 
     structTag = [pointTag, lineTag, surfaceTag]
-    GeomSpec = [NACA_type, bluntTrailingEdge, optimisedGridSpacing, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
+    GeomSpec = [NACA_type, bluntTrailingEdge, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
     GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
     [pTL_airfoil, lTL_airfoil, sTL_airfoil, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec) 
 

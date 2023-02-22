@@ -79,13 +79,12 @@ def NACAxxx(NACA_type, bluntTrailingEdge, AoA, chord, airfoilReference, height_L
         a4 = -0.1036        # Closed trailing edge
     #
     # Airfoil X points
+    x = np.linspace(0,1,gridPts)    # Uniform spacing
     if optimisedGridSpacing:
-        x = np.linspace(0,1,gridPts+1)  # Uniform spacing
-        x = 0.5*(1-np.cos(x*np.pi))     # Non-uniform spacing
-        x = np.concatenate((x[0:-2],[x[-1]])) # remove penultimate point that is systematically to close to TE
-    else:
-        x = np.linspace(0,1,gridPts)    # Uniform spacing
-    #
+        # x = 0.5*(1-np.cos(x*np.pi))                                    # Non-uniform spacing - v0
+        MTP = 1/3*np.max([0.1,P]) # meshTransitionParam
+        x = MTP*(1-np.cos(x*np.pi/(2*MTP)))*(x < MTP) + x*(x >= MTP)     # Non-uniform spacing - v1
+
     # Camber line and camber line gradient
     yc     = np.ones(gridPts)
     dyc_dx = np.ones(gridPts)
@@ -177,17 +176,16 @@ def gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec):
 
     NACA_type = GeomSpec[0]
     bluntTrailingEdge = GeomSpec[1]
-    optimisedGridSpacing = GeomSpec[2]
-    AoA = GeomSpec[3]
-    chord = GeomSpec[4]
-    airfoilReferenceAlongChord = GeomSpec[5]
-    airfoilReferenceCoordinate = GeomSpec[6]
-    height_LE = GeomSpec[7]
-    height_TE = GeomSpec[8]
-    TEpatchLength = GeomSpec[9]
-    TEpatchGridFlaringAngle = GeomSpec[10]
-    wakeLength = GeomSpec[11]
-    wakeGridFlaringAngle = GeomSpec[12]
+    AoA = GeomSpec[2]
+    chord = GeomSpec[3]
+    airfoilReferenceAlongChord = GeomSpec[4]
+    airfoilReferenceCoordinate = GeomSpec[5]
+    height_LE = GeomSpec[6]
+    height_TE = GeomSpec[7]
+    TEpatchLength = GeomSpec[8]
+    TEpatchGridFlaringAngle = GeomSpec[9]
+    wakeLength = GeomSpec[10]
+    wakeGridFlaringAngle = GeomSpec[11]
 
     gridPts_alongNACA = GridPtsSpec[0]
     gridPts_inBL = GridPtsSpec[1]
@@ -200,6 +198,9 @@ def gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec):
 
     shiftVec = np.array(shiftVec)
     airfoilReferenceCoordinate = np.array(airfoilReferenceCoordinate)
+
+    optimisedGridSpacing = True
+
     [upper_NACAfoil, lower_NACAfoil, camberLine, upper_offset, lower_offset, theta_TE] = NACAxxx(NACA_type, bluntTrailingEdge, AoA, chord, airfoilReferenceAlongChord, height_LE, height_TE, optimisedGridSpacing, gridPts_alongNACA)
     dyc_dx_TE = np.tan(theta_TE*np.pi/180)
 
@@ -1640,16 +1641,16 @@ def gmeshed_bladeTip_vol(sTS_slice, tsTS_tip, gridPts_alongNACA, bluntTrailingEd
 def gmeshed_bladeTip_ts(pTS_slice, lTS_slice, GeomSpec, GridPtsSpec, rotMat, shiftVec, pointTag, lineTag, surfaceTag):
 
     # GeomSpec = [NACA_type, bluntTrailingEdge, optimisedGridSpacing, pitch_vecAngle[i], chord_vec[i], airfoilReferenceAlongChord_c*chord_vec[i], airfoilReferenceCoordinate[i], height_LE_c*chord_vec[i], height_TE_c*chord_vec[i], TEpatchLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), TEpatchGridFlaringAngle, wakeLength_c*chord_vec[i]*np.cos(pitch_vecAngle[i]*np.pi/180), wakeGridFlaringAngle]
-    pitch = GeomSpec[3]
+    pitch = GeomSpec[2]
     GeomSpec[0] = '0012' # force 'NACA_type' to be 0012
 
     structTag = [pointTag, lineTag, surfaceTag]
 
     # take into account the blade 3D rotation to define the tip connection
     bladeShiftVec = shiftVec
-    airfoilReferenceCoordinate = GeomSpec[6]
+    airfoilReferenceCoordinate = GeomSpec[5]
     shiftVec = -np.matmul(rotMat, np.array([airfoilReferenceCoordinate[0], airfoilReferenceCoordinate[1], -airfoilReferenceCoordinate[2]])) + bladeShiftVec
-    GeomSpec[6] = [0.0, 0.0, 0.0] # airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
+    GeomSpec[5] = [0.0, 0.0, 0.0] # airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
     # rotMat = np.matmul(rotMat, rotationMatrix([-pitch, -pitch, 90.0])) # angles in degree
     rotMat = np.matmul(rotMat, rotationMatrix([-pitch, pitch, -90.0])) # angles in degree
 
