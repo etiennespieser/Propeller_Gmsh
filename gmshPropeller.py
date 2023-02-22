@@ -16,7 +16,7 @@ optimisedGridSpacing = False
 
 gridPts_alongNACA = 4
 
-gridPts_inBL = 5 # > 2 for split into fully hex mesh
+gridPts_inBL = 3 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
 TEpatchGridFlaringAngle = 0 # deg
@@ -47,10 +47,10 @@ airfoilReferenceCoordinate = np.array([skew_vec, -rake_vec, -radii_vec]).transpo
 radii_step = [1] * len(radii_vec) # number of radial elements between to radial slices. 
 
 airfoilReferenceAlongChord_c = 0.5
-TEpatchLength_c = 0.1 # length of the TEpatch in along the x-axis
+TEpatchLength_c = 0.5 # length of the TEpatch in along the x-axis
 wakeLength_c = 0.3 # length of the wake in along the x-axis
-height_LE_c = 0.1 # Structured Grid offset layer gap at the leading edge
-height_TE_c = 0.2 # Structured Grid offset layer gap at the trailing edge
+height_LE_c = 0.2 # Structured Grid offset layer gap at the leading edge
+height_TE_c = 0.5 # Structured Grid offset layer gap at the trailing edge
 gridPts_inTE = int(gridPts_inBL/4) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
 airfoilReferenceAlongChord_c = 0.5
 
@@ -168,10 +168,10 @@ if geometry_file == "VP1304_geom" :
     elemSize_cyl2 = 0.02
 
 elif geometry_file == "SP2_geom":
-    y_max_cyl1 = 0.02
-    y_min_cyl1 = -0.03
-    r_cyl1 = 0.125
-    elemSize_cyl1 = 0.0025
+    y_max_cyl1 = 0.03
+    y_min_cyl1 = -0.04
+    r_cyl1 = 0.15
+    elemSize_cyl1 = 0.003
 
     y_max_cyl2 = 0.075
     y_min_cyl2 = -0.15
@@ -247,6 +247,9 @@ gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf1[5]], 5, "Inner Cylinder Bottom")
 gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf2[0], cylSurf2[1], cylSurf2[2], cylSurf2[3]], 6, "Outer Cylinder Side")
 gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf2[4]], 7, "Inner Cylinder Top")
 gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf2[5]], 8, "Inner Cylinder Bottom")
+
+# gmsh.model.addPhysicalGroup(pb_2Dim, [*sStructGridSkin1], 9, "Blade 1 StructBL Wrap")
+# gmsh.model.addPhysicalGroup(pb_2Dim, [*sStructGridSkin2], 10, "Blade 2 StructBL Wrap")
 
 
 # Write mesh data:
