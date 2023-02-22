@@ -244,7 +244,7 @@ gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf1[0], cylSurf1[1], cylSurf1[2], cyl
 gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf1[4]], 4, "Inner Cylinder Top")
 gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf1[5]], 5, "Inner Cylinder Bottom")
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf2[0], cylSurf2[1], cylSurf2[2], cylSurf2[3]], 6, "Inner Cylinder Side")
+gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf2[0], cylSurf2[1], cylSurf2[2], cylSurf2[3]], 6, "Outer Cylinder Side")
 gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf2[4]], 7, "Inner Cylinder Top")
 gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf2[5]], 8, "Inner Cylinder Bottom")
 
