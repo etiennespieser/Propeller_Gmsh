@@ -2391,11 +2391,11 @@ def returnStructGridVol_withoutTip(vTS, bluntTrailingEdge):
     vTEmidLow = 8
 
     returnStructGridVol = []
-    returnStructGridVol.extend([vTS[vBL], vTS[vwakeUp], vTS[vwakeLow], vTS[vTEup], vTS[vTElow]])
+    returnStructGridVol.extend([*vTS[vBL], *vTS[vwakeUp], *vTS[vwakeLow], *vTS[vTEup], *vTS[vTElow]])
 
     if bluntTrailingEdge:
-        returnStructGridVol.extend([vTS[vTEmidUp], vTS[vTEmidLow]])
-        returnStructGridVol.extend([vTS[vwakeMidUp], vTS[vwakeMidLow]])
+        returnStructGridVol.extend([*vTS[vTEmidUp], *vTS[vTEmidLow]])
+        returnStructGridVol.extend([*vTS[vwakeMidUp], *vTS[vwakeMidLow]])
 
     return returnStructGridVol
 
@@ -2415,12 +2415,12 @@ def returnStructGridVol(vTS, vTS_tip, bluntTrailingEdge):
     vTipPatch = 1
 
     returnStructGridVol = []
-    returnStructGridVol.extend([vTS[vBL], vTS[vwakeUp], vTS[vwakeLow], vTS[vTEup], vTS[vTElow]])
+    returnStructGridVol.extend([*vTS[vBL], *vTS[vwakeUp], *vTS[vwakeLow], *vTS[vTEup], *vTS[vTElow]])
     if bluntTrailingEdge:
-        returnStructGridVol.extend([vTS[vTEmidUp], vTS[vTEmidLow]])
-        returnStructGridVol.extend([vTS[vwakeMidUp], vTS[vwakeMidLow]])
+        returnStructGridVol.extend([*vTS[vTEmidUp], *vTS[vTEmidLow]])
+        returnStructGridVol.extend([*vTS[vwakeMidUp], *vTS[vwakeMidLow]])
 
-    returnStructGridVol.extend([vTS_tip[vTipBL], vTS_tip[vTipPatch]])
+    returnStructGridVol.extend([*vTS_tip[vTipBL], *vTS_tip[vTipPatch]])
 
     return returnStructGridVol
 

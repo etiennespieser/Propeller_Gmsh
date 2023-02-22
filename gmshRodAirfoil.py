@@ -12,7 +12,7 @@ import shutil
 NACA_type = '4412'
 CONF = 'airfoil' # airfoil, rod, rodAirfoil
 
-bluntTrailingEdge = True
+bluntTrailingEdge = False
 optimisedGridSpacing = False
 
 gridPts_alongNACA = 80
@@ -208,7 +208,6 @@ gmsh.model.mesh.generate()
 gmsh.model.geo.synchronize()
 [nodePerEntity, elemPerEntity] = countDOF()
 
-
 gmsh.model.addPhysicalGroup(pb_3Dim, [*volMesh], 1, "CFD Grid")
 
 # export volume mesh only for visualisation:
@@ -220,11 +219,11 @@ else:
 gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 1, "Periodic BC")
 
 if not (CONF == 'airfoil'):
-    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_rodHardWall], 2, "Rod Hard Wall BC")
+    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_rodHardWall], 2, "Rod Hard Wall")
 if not (CONF == 'rod'):
-    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_airfoilHardWall], 3, "Airfoil Hard Wall BC")
+    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_airfoilHardWall], 3, "Airfoil Hard Wall")
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_innerSkin], 4, "BUFF inner BC")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_innerSkin], 4, "BUFF inner Wrap")
 
 ExtrudUnstructBUFF_inlet = ExtrudUnstructBUFF_outerSkin[0]
 ExtrudUnstructBUFF_bottom = ExtrudUnstructBUFF_outerSkin[1]
@@ -234,8 +233,8 @@ ExtrudUnstructBUFF_top = ExtrudUnstructBUFF_outerSkin[3]
 gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_inlet], 5, "Inlet BC")
 gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_outlet], 6, "Outlet BC")
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_bottom], 7, "Bottom Frontier BC")
-gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_top], 8, "Top Frontier BC")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_bottom], 7, "Bottom BC")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_top], 8, "Top BC")
 
 
 # Write mesh data:

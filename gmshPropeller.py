@@ -9,7 +9,7 @@ import shutil
 
 NACA_type = '4412'
 
-geometry_file = "VP1304_geom" # "VP1304_geom" , "SP2_geom"
+geometry_file = "SP2_geom" # "VP1304_geom" , "SP2_geom" from https://doi.org/10.1063/5.0098891
 
 bluntTrailingEdge = False
 optimisedGridSpacing = False
@@ -185,13 +185,13 @@ gmsh.model.geo.addSurfaceLoop([*sStructGridSkin1, *sStructGridSkin2, *cylSurf1],
 gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
 gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
 volumeTag = volumeTag+1
-vol_unstrucCFD = volumeTag
+vol_unstructCFD = volumeTag
 
 gmsh.model.geo.addSurfaceLoop([*cylSurf1, *cylSurf2], volumeTag+1)
 gmsh.model.geo.addVolume([volumeTag+1], volumeTag+1)
 gmsh.model.geo.mesh.setRecombine(pb_3Dim, volumeTag+1) # To create quadrangles instead of triangles
 volumeTag = volumeTag+1
-vol_unstrucBUFF = volumeTag
+vol_unstructBUFF = volumeTag
 
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -229,27 +229,32 @@ gmsh.model.mesh.generate(3)
 
 # Create the relevant Gmsh data structures from Gmsh model.
 gmsh.model.geo.synchronize()
-
-GMSHvolumeTag = 0
-for volBeat in [*vol_blade_1, *vol_blade_2]:
-    GMSHvolumeTag = GMSHvolumeTag + 1
-    gmsh.model.addPhysicalGroup(pb_3Dim, volBeat, GMSHvolumeTag, "Struct Grid volume 1")
-
-gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucCFD], GMSHvolumeTag+1, "BL volume")
-gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstrucBUFF], GMSHvolumeTag+2, "BL volume")
-
-# gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin1], 11, "BL volume")
-# # gmsh.model.addPhysicalGroup(pb_2Dim, [*sStructGridSkin1], 12, "BL volume")
-# gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin2], 13, "BL volume")
-
-
 [nodePerEntity, elemPerEntity] = countDOF()
+
+gmsh.model.addPhysicalGroup(pb_3Dim, [*vol_blade_1, *vol_blade_2, vol_unstructCFD], 1, "Propeller Grid")
+gmsh.model.addPhysicalGroup(pb_3Dim, [vol_unstructBUFF], 2, "Outer Grid")
+
+# export volume mesh only for visualisation:
+gmsh.write(geometry_file+"_NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.vtk")
+
+gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin1], 1, "Blade 1 Hard Wall")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*sairfoilSkin2], 2, "Blade 2 Hard Wall")
+
+gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf1[0], cylSurf1[1], cylSurf1[2], cylSurf1[3]], 3, "Inner Cylinder Side")
+gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf1[4]], 4, "Inner Cylinder Top")
+gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf1[5]], 5, "Inner Cylinder Bottom")
+
+gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf2[0], cylSurf2[1], cylSurf2[2], cylSurf2[3]], 6, "Inner Cylinder Side")
+gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf2[4]], 7, "Inner Cylinder Top")
+gmsh.model.addPhysicalGroup(pb_2Dim, [cylSurf2[5]], 8, "Inner Cylinder Bottom")
+
 
 # Write mesh data:
 gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is selected "Mesh.SaveAll=1" discards the group definitions (to be avoided!).
 
+# export mesh with all tags for computation:
 gmsh.write(geometry_file+"_NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.msh")
-gmsh.write(geometry_file+"_NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.vtk")
+
 
 # delete the "__pycache__" folder:
 try:
