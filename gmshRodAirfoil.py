@@ -14,19 +14,19 @@ CONF = 'rodAirfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = True
 
-gridPts_alongNACA = 20
+gridPts_alongNACA = 40
 
-gridPts_alongSpan = 5
+gridPts_alongSpan = 10
 
-gridPts_inBL = 5 # > 2 for split into fully hex mesh
+gridPts_inBL = 10 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
 TEpatchGridFlaringAngle = 30 # deg
-gridPts_alongTEpatch = 3 # > 2 for split into fully hex mesh
+gridPts_alongTEpatch = 5 # > 2 for split into fully hex mesh
 gridGeomProg_alongTEpatch = 1.05
 
 wakeGridFlaringAngle = 0 # deg
-gridPts_alongWake = 8 # > 2 for split into fully hex mesh
+gridPts_alongWake = 15 # > 2 for split into fully hex mesh
 gridGeomProg_alongWake = 1.0
 
 pitch = 20.0 # deg
@@ -77,11 +77,11 @@ if not (CONF == 'airfoil'):
 
     rodPos = [-2.0*chord, 0.0, 0.0]
     rodR = 0.1*chord
-    rodElemSize = 0.02*chord
+    rodElemSize = 0.01*chord
     rodBLwidth = 0.05*chord
 
     gridPts_alongRod = int(2*np.pi*rodR/rodElemSize/4)
-    gridPts_inRodBL = 5
+    gridPts_inRodBL = 10
     gridGeomProg_inRodBL = 1.1
 
     structTag = [pointTag, lineTag, surfaceTag]
