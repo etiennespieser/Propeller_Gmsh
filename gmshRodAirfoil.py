@@ -10,23 +10,23 @@ from gmshToolkit import *
 import shutil
 
 NACA_type = '4412'
-CONF = 'airfoil' # airfoil, rod, rodAirfoil
+CONF = 'rodAirfoil' # airfoil, rod, rodAirfoil
 
-bluntTrailingEdge = False
+bluntTrailingEdge = True
 
-gridPts_alongNACA = 80
+gridPts_alongNACA = 20
 
-gridPts_alongSpan = 10
+gridPts_alongSpan = 5
 
-gridPts_inBL = 30 # > 2 for split into fully hex mesh
+gridPts_inBL = 5 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
-TEpatchGridFlaringAngle = 0 # deg
+TEpatchGridFlaringAngle = 30 # deg
 gridPts_alongTEpatch = 3 # > 2 for split into fully hex mesh
 gridGeomProg_alongTEpatch = 1.05
 
 wakeGridFlaringAngle = 0 # deg
-gridPts_alongWake = 3 # > 2 for split into fully hex mesh
+gridPts_alongWake = 8 # > 2 for split into fully hex mesh
 gridGeomProg_alongWake = 1.0
 
 pitch = 20.0 # deg
@@ -56,7 +56,7 @@ if not (CONF == 'rod'):
     wakeLength = 0.3*chord*np.cos(pitch*np.pi/180) # length of the wake in along the x-axis
     height_LE = 0.05*chord # Structured Grid offset layer gap at the leading edge
     height_TE = 0.1*chord # Structured Grid offset layer gap at the trailing edge
-    gridPts_inTE = int(gridPts_inBL/4) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
+    gridPts_inTE = int(gridPts_inBL/8) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
 
     airfoilReferenceAlongChord = 0.5*chord
     airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
@@ -81,7 +81,7 @@ if not (CONF == 'airfoil'):
     rodBLwidth = 0.05*chord
 
     gridPts_alongRod = int(2*np.pi*rodR/rodElemSize/4)
-    gridPts_inRodBL = 25
+    gridPts_inRodBL = 5
     gridGeomProg_inRodBL = 1.1
 
     structTag = [pointTag, lineTag, surfaceTag]
@@ -147,15 +147,15 @@ if not (CONF == 'rod'):
 [ExtrudUnstructBUFF_vol, ExtrudUnstructBUFF_symFace, ExtrudUnstructBUFF_innerSkin, ExtrudUnstructBUFF_outerSkin] = extrude_unstructBUFF(surf_unstructBUFF, span, gridPts_alongSpan)
 
 if CONF == 'rodAirfoil':
-    volMesh = [*ExtrudRodBL_vol, *ExtrudAirfoildStruct_vol, *ExtrudUnstructCFD_vol, *ExtrudUnstructBUFF_vol]
+    volMesh = [*ExtrudRodBL_vol, *ExtrudAirfoildStruct_vol, *ExtrudUnstructCFD_vol]
     surfMesh_original = [*sTL_rod, *structGridSurf, surf_unstructCFD, surf_unstructBUFF ]
     surfMesh_symFace = [*ExtrudRodBL_symFace, *ExtrudStructAirfoil_symFace, *ExtrudUnstructCFD_symFace, *ExtrudUnstructBUFF_symFace]
 elif CONF == 'airfoil':
-    volMesh = [*ExtrudAirfoildStruct_vol, *ExtrudUnstructCFD_vol, *ExtrudUnstructBUFF_vol]
+    volMesh = [*ExtrudAirfoildStruct_vol, *ExtrudUnstructCFD_vol]
     surfMesh_original = [*structGridSurf, surf_unstructCFD, surf_unstructBUFF ]
     surfMesh_symFace = [*ExtrudStructAirfoil_symFace, *ExtrudUnstructCFD_symFace, *ExtrudUnstructBUFF_symFace]
 elif CONF == 'rod':
-    volMesh = [*ExtrudRodBL_vol, *ExtrudUnstructCFD_vol, *ExtrudUnstructBUFF_vol]
+    volMesh = [*ExtrudRodBL_vol, *ExtrudUnstructCFD_vol]
     surfMesh_original = [*sTL_rod, surf_unstructCFD, surf_unstructBUFF ]
     surfMesh_symFace = [*ExtrudRodBL_symFace, *ExtrudUnstructCFD_symFace, *ExtrudUnstructBUFF_symFace]
 
@@ -208,6 +208,7 @@ gmsh.model.geo.synchronize()
 [nodePerEntity, elemPerEntity] = countDOF()
 
 gmsh.model.addPhysicalGroup(pb_3Dim, [*volMesh], 1, "CFD Grid")
+gmsh.model.addPhysicalGroup(pb_3Dim, [*ExtrudUnstructBUFF_vol], 2, "BUFF Grid")
 
 # export volume mesh only for visualisation:
 if CONF == 'rod':
@@ -215,25 +216,25 @@ if CONF == 'rod':
 else:
     gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems.vtk")
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 1, "Periodic BC")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 3, "Periodic BC")
 
 if not (CONF == 'airfoil'):
-    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_rodHardWall], 2, "Rod Hard Wall")
+    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_rodHardWall], 4, "Rod Hard Wall")
 if not (CONF == 'rod'):
-    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_airfoilHardWall], 3, "Airfoil Hard Wall")
+    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_airfoilHardWall], 5, "Airfoil Hard Wall")
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_innerSkin], 4, "BUFF inner Wrap")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_innerSkin], 6, "BUFF inner Wrap")
 
 ExtrudUnstructBUFF_inlet = ExtrudUnstructBUFF_outerSkin[0]
 ExtrudUnstructBUFF_bottom = ExtrudUnstructBUFF_outerSkin[1]
 ExtrudUnstructBUFF_outlet = ExtrudUnstructBUFF_outerSkin[2]
 ExtrudUnstructBUFF_top = ExtrudUnstructBUFF_outerSkin[3]
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_inlet], 5, "Inlet BC")
-gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_outlet], 6, "Outlet BC")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_inlet], 7, "Inlet BC")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_outlet], 8, "Outlet BC")
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_bottom], 7, "Bottom BC")
-gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_top], 8, "Top BC")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_bottom], 9, "Bottom BC")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_top], 10, "Top BC")
 
 
 # Write mesh data:
