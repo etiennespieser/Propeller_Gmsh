@@ -13,27 +13,27 @@ NACA_type = '4412'
 CONF = 'rodAirfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = True
-periodicity = False
 
-gridPts_alongNACA = 40
+gridPtsRichness = 0.3
 
-gridPts_alongSpan = 10
+gridPts_alongNACA = int(40*gridPtsRichness)
 
-gridPts_inBL = 10 # > 2 for split into fully hex mesh
+gridPts_alongSpan = int(10*gridPtsRichness)
+
+gridPts_inBL = int(10*gridPtsRichness) # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
 TEpatchGridFlaringAngle = 30 # deg
-gridPts_alongTEpatch = 5 # > 2 for split into fully hex mesh
+gridPts_alongTEpatch = int(5*gridPtsRichness) # > 2 for split into fully hex mesh
 gridGeomProg_alongTEpatch = 1.05
 
 wakeGridFlaringAngle = 0 # deg
-gridPts_alongWake = 15 # > 2 for split into fully hex mesh
+gridPts_alongWake = int(15*gridPtsRichness) # > 2 for split into fully hex mesh
 gridGeomProg_alongWake = 1.0
 
 pitch = 20.0 # deg
 chord = 0.2 # m 
 span = 0.75*chord # m
-
 
 # Initialize gmsh:
 gmsh.initialize()
@@ -78,11 +78,11 @@ if not (CONF == 'airfoil'):
 
     rodPos = [-2.0*chord, 0.0, 0.0]
     rodR = 0.1*chord
-    rodElemSize = 0.01*chord
+    rodElemSize = 0.01*chord/gridPtsRichness
     rodBLwidth = 0.05*chord
 
     gridPts_alongRod = int(2*np.pi*rodR/rodElemSize/4)
-    gridPts_inRodBL = 10
+    gridPts_inRodBL = int(10*gridPtsRichness)
     gridGeomProg_inRodBL = 1.1
 
     structTag = [pointTag, lineTag, surfaceTag]
@@ -98,13 +98,13 @@ x_min = - 3*chord
 x_max = 1.5*chord
 y_min = - chord
 y_max = chord
-elemSize_rect = chord/10
+elemSize_rect = chord/10/gridPtsRichness
 
 x_minBUFF = - 3.5*chord
 x_maxBUFF = 3*chord
 y_minBUFF = - 1.5*chord
 y_maxBUFF = 1.5*chord
-elemSize_rectBUFF = chord/5
+elemSize_rectBUFF = chord/5/gridPtsRichness
 
 [rectLine, pointTag, lineTag] = gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec)
 [rectLineBUFF, pointTag, lineTag] = gmeshed_rectangle_contour(x_minBUFF, x_maxBUFF, y_minBUFF, y_maxBUFF, elemSize_rectBUFF, pointTag, lineTag, rotMat, shiftVec)
@@ -164,11 +164,10 @@ elif CONF == 'rod':
 # # Set periodic bounday condition # # 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-if periodicity:
-    # periodicity along z axis at separation of span
-    gmsh.model.geo.synchronize()
-    gmsh.model.mesh.setPeriodic(pb_2Dim, [*surfMesh_symFace], [*surfMesh_original], [1,0,0,0, 0,1,0,0, 0,0,1,span, 0,0,0,1])
-    # from here on, "surfMesh_symFace" and "surfMesh_original" refer to the same elements.
+# periodicity along z axis at separation of span
+gmsh.model.geo.synchronize()
+gmsh.model.mesh.setPeriodic(pb_2Dim, [*surfMesh_symFace], [*surfMesh_original], [1,0,0,0, 0,1,0,0, 0,0,1,span, 0,0,0,1])
+# from here on, "surfMesh_symFace" and "surfMesh_original" refer to the same elements.
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Generate visualise and export the mesh # #
@@ -218,11 +217,7 @@ if CONF == 'rod':
 else:
     gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems.vtk")
 
-if periodicity:
-    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 3, "Periodic BC")
-else:
-    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 3, "side BC")
-    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_symFace], 11, "symmetric side BC")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 3, "Periodic BC")
 
 if not (CONF == 'airfoil'):
     gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_rodHardWall], 4, "Rod Hard Wall")
@@ -247,14 +242,11 @@ gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_top], 10, "Top BC")
 gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is selected "Mesh.SaveAll=1" discards the group definitions (to be avoided!).
 
 # export mesh with all tags for computation:
-periodicTag = ''
-if not periodicity:
-    periodicTag = "_nonPeriodic"
 
 if CONF == 'rod':
-    gmsh.write("rod_"+str(sum(elemPerEntity))+"elems"+periodicTag+".msh")
+    gmsh.write("rod_"+str(sum(elemPerEntity))+"elems.msh")
 else:
-    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems"+periodicTag+".msh")
+    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems.msh")
 
 # delete the "__pycache__" folder:
 try:
