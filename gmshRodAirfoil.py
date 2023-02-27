@@ -13,6 +13,7 @@ NACA_type = '4412'
 CONF = 'rodAirfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = True
+periodicity = False
 
 gridPts_alongNACA = 40
 
@@ -163,10 +164,11 @@ elif CONF == 'rod':
 # # Set periodic bounday condition # # 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-# periodicity along z axis at separation of span
-gmsh.model.geo.synchronize()
-gmsh.model.mesh.setPeriodic(pb_2Dim, [*surfMesh_symFace], [*surfMesh_original], [1,0,0,0, 0,1,0,0, 0,0,1,span, 0,0,0,1])
-# from here on, "surfMesh_symFace" and "surfMesh_original" refer to the same elements.
+if periodicity:
+    # periodicity along z axis at separation of span
+    gmsh.model.geo.synchronize()
+    gmsh.model.mesh.setPeriodic(pb_2Dim, [*surfMesh_symFace], [*surfMesh_original], [1,0,0,0, 0,1,0,0, 0,0,1,span, 0,0,0,1])
+    # from here on, "surfMesh_symFace" and "surfMesh_original" refer to the same elements.
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Generate visualise and export the mesh # #
@@ -216,7 +218,11 @@ if CONF == 'rod':
 else:
     gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems.vtk")
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 3, "Periodic BC")
+if periodicity:
+    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 3, "Periodic BC")
+else:
+    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 3, "side BC")
+    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_symFace], 11, "symmetric side BC")
 
 if not (CONF == 'airfoil'):
     gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_rodHardWall], 4, "Rod Hard Wall")
@@ -241,10 +247,14 @@ gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_top], 10, "Top BC")
 gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is selected "Mesh.SaveAll=1" discards the group definitions (to be avoided!).
 
 # export mesh with all tags for computation:
+periodicTag = ''
+if not periodicity:
+    periodicTag = "_nonPeriodic"
+
 if CONF == 'rod':
-    gmsh.write("rod_"+str(sum(elemPerEntity))+"elems.msh")
+    gmsh.write("rod_"+str(sum(elemPerEntity))+"elems"+periodicTag+".msh")
 else:
-    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems.msh")
+    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems"+periodicTag+".msh")
 
 # delete the "__pycache__" folder:
 try:

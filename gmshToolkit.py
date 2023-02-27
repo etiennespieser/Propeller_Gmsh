@@ -57,6 +57,7 @@
 import gmsh
 import numpy as np
 import matplotlib.pyplot as plt
+pb_1Dim = 1
 pb_2Dim = 2
 pb_3Dim = 3
 
@@ -2101,6 +2102,49 @@ def gmeshed_bladeTip_ts(pTS_slice, lTS_slice, GeomSpec, GridPtsSpec, rotMat, shi
 # ******************************************************************************************************************************************************************************
 # ******************************************************************************************************************************************************************************
 # ******************************************************************************************************************************************************************************
+
+def returnAirfoilContour(lTS, bluntTrailingEdge):
+
+    # Tags for easily accessing the list elements
+
+    lairfoilUp = 0
+    lairfoilLow = 1
+    lBLup = 2
+    lBLlow = 3
+    lBLrad = 4
+    lA = 5
+    lB = 6
+    lC = 7
+    lD = 8
+    lEu = 9
+    lEl = 10
+    lFu = 11
+    lFl = 12
+    lG = 13
+    lH = 14
+    lI = 15
+    lJu = 16
+    lJl = 17
+    lK = 18
+    lL = 19
+    lM = 20
+    lN = 21
+    lO = 22
+    lP = 23
+    lAr = 24
+    lBr = 25
+    lAer = 26
+    lBer = 27
+
+    #               ~       ~       ~
+
+    lAirfoilContour = []
+    lAirfoilContour.extend([*lTS[lairfoilUp], *lTS[lairfoilLow]])
+    if bluntTrailingEdge:
+        lAirfoilContour.extend([lTS[lEl], lTS[lEu]])
+
+    return lAirfoilContour
+
 
 def returnStructGridOuterContour(lTS, bluntTrailingEdge):
 

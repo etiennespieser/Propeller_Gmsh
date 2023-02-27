@@ -65,7 +65,8 @@ GeomSpec = [NACA_type, bluntTrailingEdge, pitch, chord, airfoilReferenceAlongCho
 GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
 [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
 
-bladeLine = returnStructGridOuterContour(lineTag_list, bluntTrailingEdge)
+airfoilLine = returnAirfoilContour(lineTag_list, bluntTrailingEdge)
+structBLouterLine = returnStructGridOuterContour(lineTag_list, bluntTrailingEdge)
 structGridSurf = returnStructGridSide(surfaceTag_list, bluntTrailingEdge)
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -90,7 +91,7 @@ shiftVec = np.array([0.0, 0.0, 0.0]) # shift of the origin
 [ rectLine, pointTag, lineTag] = gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec)
 [ rectLineBUFF, pointTag, lineTag] = gmeshed_rectangle_contour(x_minBUFF, x_maxBUFF, y_minBUFF, y_maxBUFF, elemSize_rectBUFF, pointTag, lineTag, rotMat, shiftVec)
 
-gmsh.model.geo.add_curve_loop( [*rectLine, *bladeLine], surfaceTag+1) 
+gmsh.model.geo.add_curve_loop( [*rectLine, *structBLouterLine], surfaceTag+1) 
 gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
 gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
 surfaceTag = surfaceTag+1
@@ -138,8 +139,13 @@ gmsh.model.mesh.generate(2)
 # Create the relevant Gmsh data structures from Gmsh model.
 gmsh.model.geo.synchronize()
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*structGridSurf, surf_unstr], 1, "CFD") # physical surface
-gmsh.model.addPhysicalGroup(pb_2Dim, [surf_unstrBUFF], 2, "Buff") # physical surface
+gmsh.model.addPhysicalGroup(pb_2Dim, [*structGridSurf, surf_unstr], 1, "CFD")
+gmsh.model.addPhysicalGroup(pb_2Dim, [surf_unstrBUFF], 2, "Buff")
+
+gmsh.model.addPhysicalGroup(pb_1Dim, [*airfoilLine], 3, "airfoil skin")
+gmsh.model.addPhysicalGroup(pb_1Dim, [*rectLine], 4, "regular CAA frontier")
+gmsh.model.addPhysicalGroup(pb_1Dim, [*rectLineBUFF], 5, "BUFF outer contour")
+
 
 [nodePerEntity, elemPerEntity] = countDOF()
 
