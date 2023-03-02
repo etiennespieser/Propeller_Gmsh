@@ -9,31 +9,31 @@ import gmsh
 from gmshToolkit import *
 import shutil
 
-NACA_type = '4412'
-CONF = 'rodAirfoil' # airfoil, rod, rodAirfoil
+NACA_type = '0012'
+CONF = 'airfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = True
 
-gridPtsRichness = 0.3
+gridPtsRichness = 2.0
 
-gridPts_alongNACA = int(40*gridPtsRichness)
+gridPts_alongNACA = int(75*gridPtsRichness)
 
-gridPts_alongSpan = int(10*gridPtsRichness)
+gridPts_alongSpan = int(20*gridPtsRichness)
 
-gridPts_inBL = int(10*gridPtsRichness) # > 2 for split into fully hex mesh
+gridPts_inBL = int(15*gridPtsRichness) # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
 TEpatchGridFlaringAngle = 30 # deg
-gridPts_alongTEpatch = int(5*gridPtsRichness) # > 2 for split into fully hex mesh
+gridPts_alongTEpatch = int(8*gridPtsRichness) # > 2 for split into fully hex mesh
 gridGeomProg_alongTEpatch = 1.05
 
-wakeGridFlaringAngle = 0 # deg
-gridPts_alongWake = int(15*gridPtsRichness) # > 2 for split into fully hex mesh
+wakeGridFlaringAngle = 10 # deg
+gridPts_alongWake = int(25*gridPtsRichness) # > 2 for split into fully hex mesh
 gridGeomProg_alongWake = 1.0
 
-pitch = 20.0 # deg
+pitch = 12.0 # deg
 chord = 0.2 # m 
-span = 0.75*chord # m
+span = 0.2*chord # m
 
 # Initialize gmsh:
 gmsh.initialize()
@@ -54,7 +54,7 @@ if not (CONF == 'rod'):
 
     airfoilReferenceAlongChord = 0.5*chord
     TEpatchLength = 0.1*chord*np.cos(pitch*np.pi/180) # length of the TEpatch in along the x-axis
-    wakeLength = 0.3*chord*np.cos(pitch*np.pi/180) # length of the wake in along the x-axis
+    wakeLength = 0.5*chord*np.cos(pitch*np.pi/180) # length of the wake in along the x-axis
     height_LE = 0.05*chord # Structured Grid offset layer gap at the leading edge
     height_TE = 0.1*chord # Structured Grid offset layer gap at the trailing edge
     gridPts_inTE = int(gridPts_inBL/8) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
@@ -94,16 +94,16 @@ if not (CONF == 'airfoil'):
 # # Creation of the exterior region # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-x_min = - 3*chord
-x_max = 1.5*chord
-y_min = - chord
-y_max = chord
+x_min = - 1.5*chord
+x_max = 3*chord
+y_min = - 1.5*chord
+y_max = 1.5*chord
 elemSize_rect = chord/10/gridPtsRichness
 
-x_minBUFF = - 3.5*chord
-x_maxBUFF = 3*chord
-y_minBUFF = - 1.5*chord
-y_maxBUFF = 1.5*chord
+x_minBUFF = - 2*chord
+x_maxBUFF = 5*chord
+y_minBUFF = - 2*chord
+y_maxBUFF = 2*chord
 elemSize_rectBUFF = chord/5/gridPtsRichness
 
 [rectLine, pointTag, lineTag] = gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec)

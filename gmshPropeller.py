@@ -13,17 +13,17 @@ geometry_file = "SP2_geom" # "VP1304_geom" , "SP2_geom" from https://doi.org/10.
 
 bluntTrailingEdge = False
 
-gridPts_alongNACA = 4
+gridPts_alongNACA = 20
 
-gridPts_inBL = 3 # > 2 for split into fully hex mesh
+gridPts_inBL = 5 # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
-TEpatchGridFlaringAngle = 0 # deg
-gridPts_alongTEpatch = 4 # > 2 for split into fully hex mesh
+TEpatchGridFlaringAngle = 30 # deg
+gridPts_alongTEpatch = 7 # > 2 for split into fully hex mesh
 gridGeomProg_alongTEpatch = 1.05
 
 wakeGridFlaringAngle = 0 # deg
-gridPts_alongWake = 5 # > 2 for split into fully hex mesh
+gridPts_alongWake = 7 # > 2 for split into fully hex mesh
 gridGeomProg_alongWake = 1.0
 
 [radii_vec, chord_vec, pitch_vecAngle, rake_vec, skew_vecAngle] = read_geometry(geometry_file+".dat") # reads geometry and defines tip truncation
@@ -47,9 +47,9 @@ radii_step = [1] * len(radii_vec) # number of radial elements between to radial 
 
 airfoilReferenceAlongChord_c = 0.5
 TEpatchLength_c = 0.5 # length of the TEpatch in along the x-axis
-wakeLength_c = 0.3 # length of the wake in along the x-axis
+wakeLength_c = 0.5 # length of the wake in along the x-axis
 height_LE_c = 0.2 # Structured Grid offset layer gap at the leading edge
-height_TE_c = 0.5 # Structured Grid offset layer gap at the trailing edge
+height_TE_c = 0.3 # Structured Grid offset layer gap at the trailing edge
 gridPts_inTE = int(gridPts_inBL/4) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
 airfoilReferenceAlongChord_c = 0.5
 
@@ -170,7 +170,7 @@ elif geometry_file == "SP2_geom":
     y_max_cyl1 = 0.03
     y_min_cyl1 = -0.04
     r_cyl1 = 0.15
-    elemSize_cyl1 = 0.003
+    elemSize_cyl1 = 0.002
 
     y_max_cyl2 = 0.075
     y_min_cyl2 = -0.15

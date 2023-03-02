@@ -9,22 +9,24 @@ import shutil
 
 NACA_type = '0012'
 
-bluntTrailingEdge = False
+bluntTrailingEdge = True
 
-gridPts_alongNACA = 20
+gridPtsRichness = 1.0
 
-gridPts_inBL = 10 # > 2 for split into fully hex mesh
+gridPts_alongNACA = int(75*gridPtsRichness)
+
+gridPts_inBL = int(15*gridPtsRichness) # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.1
 
-TEpatchGridFlaringAngle = 0 # deg
-gridPts_alongTEpatch = 5 # > 2 for split into fully hex mesh
+TEpatchGridFlaringAngle = 30 # deg
+gridPts_alongTEpatch = int(8*gridPtsRichness) # > 2 for split into fully hex mesh
 gridGeomProg_alongTEpatch = 1.05
 
-wakeGridFlaringAngle = 0 # deg
-gridPts_alongWake = 10 # > 2 for split into fully hex mesh
+wakeGridFlaringAngle = 10 # deg
+gridPts_alongWake = int(25*gridPtsRichness) # > 2 for split into fully hex mesh
 gridGeomProg_alongWake = 1.0
 
-pitch = 20.0 # deg
+pitch = 12.0 # deg
 chord = 0.2 # m 
 
 # Initialize gmsh:
@@ -48,11 +50,11 @@ volumeTag = 0
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 airfoilReferenceAlongChord = 0.5*chord
-TEpatchLength = 0.15*chord*np.cos(pitch*np.pi/180) # length of the TEpatch in along the x-axis
-wakeLength = 0.3*chord*np.cos(pitch*np.pi/180) # length of the wake in along the x-axis
+TEpatchLength = 0.1*chord*np.cos(pitch*np.pi/180) # length of the TEpatch in along the x-axis
+wakeLength = 0.5*chord*np.cos(pitch*np.pi/180) # length of the wake in along the x-axis
 height_LE = 0.05*chord # Structured Grid offset layer gap at the leading edge
 height_TE = 0.1*chord # Structured Grid offset layer gap at the trailing edge
-gridPts_inTE = int(gridPts_inBL/4) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
+gridPts_inTE = int(gridPts_inBL/8) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
 
 airfoilReferenceAlongChord = 0.5*chord
 airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
@@ -73,17 +75,17 @@ structGridSurf = returnStructGridSide(surfaceTag_list, bluntTrailingEdge)
 # # Creation of the exterior region # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-x_min = - chord
-x_max = 1.5*chord
-y_min = - chord
-y_max = chord
-elemSize_rect = chord/10
+x_min = - 1.5*chord
+x_max = 3*chord
+y_min = - 1.5*chord
+y_max = 1.5*chord
+elemSize_rect = chord/10/gridPtsRichness
 
-x_minBUFF = - 1.5*chord
-x_maxBUFF = 3*chord
-y_minBUFF = - 1.5*chord
-y_maxBUFF = 1.5*chord
-elemSize_rectBUFF = chord/5
+x_minBUFF = - 2*chord
+x_maxBUFF = 5*chord
+y_minBUFF = - 2*chord
+y_maxBUFF = 2*chord
+elemSize_rectBUFF = chord/5/gridPtsRichness
 
 rotMat = rotationMatrix([0.0, 0.0, 0.0]) # angles in degree around [axisZ, axisY, axisX]
 shiftVec = np.array([0.0, 0.0, 0.0]) # shift of the origin
@@ -142,10 +144,21 @@ gmsh.model.geo.synchronize()
 gmsh.model.addPhysicalGroup(pb_2Dim, [*structGridSurf, surf_unstr], 1, "CFD")
 gmsh.model.addPhysicalGroup(pb_2Dim, [surf_unstrBUFF], 2, "Buff")
 
-gmsh.model.addPhysicalGroup(pb_1Dim, [*airfoilLine], 3, "airfoil skin")
-gmsh.model.addPhysicalGroup(pb_1Dim, [*rectLine], 4, "regular CAA frontier")
-gmsh.model.addPhysicalGroup(pb_1Dim, [*rectLineBUFF], 5, "BUFF outer contour")
+gmsh.model.addPhysicalGroup(pb_1Dim, [*airfoilLine], 5, "airfoil skin")
+gmsh.model.addPhysicalGroup(pb_1Dim, [*rectLine], 6, "regular CAA frontier")
 
+# gmsh.model.addPhysicalGroup(pb_1Dim, [*rectLineBUFF], 5, "BUFF outer contour")
+
+ExtrudUnstructBUFF_bottom = rectLineBUFF[0]
+ExtrudUnstructBUFF_outlet = rectLineBUFF[1]
+ExtrudUnstructBUFF_top = rectLineBUFF[2]
+ExtrudUnstructBUFF_inlet = rectLineBUFF[3]
+
+gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstructBUFF_inlet], 7, "Inlet BC")
+gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstructBUFF_outlet], 8, "Outlet BC")
+
+gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstructBUFF_bottom], 9, "Bottom BC")
+gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstructBUFF_top], 10, "Top BC")
 
 [nodePerEntity, elemPerEntity] = countDOF()
 
