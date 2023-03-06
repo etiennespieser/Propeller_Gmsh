@@ -82,9 +82,19 @@ def NACAxxx(NACA_type, bluntTrailingEdge, AoA, chord, airfoilReference, height_L
     # Airfoil X points
     x = np.linspace(0,1,gridPts)    # Uniform spacing
     if optimisedGridSpacing:
-        # x = 0.5*(1-np.cos(x*np.pi))                                    # Non-uniform spacing - v0
-        MTP = 1/3*np.max([0.1,P]) # meshTransitionParam
-        x = MTP*(1-np.cos(x*np.pi/(2*MTP)))*(x < MTP) + x*(x >= MTP)     # Non-uniform spacing - v1
+        ### Non-uniform spacing - v0
+        # x = 0.5*(1-np.cos(x*np.pi))                                  
+        ### Non-uniform spacing - v1
+        # MTP = 1/3*np.max([0.2,P]) # including MTP meshTransitionParam
+        # x = MTP*(1-np.cos(x*np.pi/(2*MTP)))*(x < MTP) + x*(x >= MTP)   
+        ### Non-uniform spacing - v2 (resample the number of points before and after MTP split)
+        MTP = 1/3*np.max([0.2,P]) # meshTransitionParam
+        x_opti = MTP*(1-np.cos(x*np.pi/(2*MTP)))*(x < MTP) + x*(x >= MTP)
+        resamplingRatio = ( (x_opti[sum(x < MTP)]-x_opti[sum(x < MTP)-1])/(x_opti[sum(x < MTP)+1]-x_opti[sum(x < MTP)]) )
+        x_patch1 = np.linspace(0, x[sum(x < MTP)], 1+ int(resamplingRatio*sum(x < MTP)))
+        x_patch2 = np.linspace(x[sum(x < MTP)], 1, gridPts - int(resamplingRatio*sum(x < MTP)))
+        x_new = np.concatenate((x_patch1[:], x_patch2[1:]), axis=0)
+        x = MTP*(1-np.cos(x_new*np.pi/(2*MTP)))*(x_new < MTP) + x_new*(x_new >= MTP)
 
     # Camber line and camber line gradient
     yc     = np.ones(gridPts)
