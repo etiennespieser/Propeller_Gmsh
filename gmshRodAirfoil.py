@@ -10,11 +10,11 @@ from gmshToolkit import *
 import shutil
 
 NACA_type = '0012'
-CONF = 'rodAirfoil' # airfoil, rod, rodAirfoil
+CONF = 'airfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = True
 
-gridPtsRichness = 0.5
+gridPtsRichness = 1.0
 
 gridPts_alongNACA = int(75*gridPtsRichness)
 
@@ -227,7 +227,7 @@ gmsh.model.geo.synchronize()
 [nodePerEntity, elemPerEntity] = countDOF()
 
 gmsh.model.addPhysicalGroup(pb_3Dim, [*volMesh], 1, "CFD Grid")
-gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_vol, *ExtrudUnstructINF_vol], 2, "BUFF Grid")
+gmsh.model.addPhysicalGroup(pb_3Dim, [*ExtrudUnstructBUFF_vol, *ExtrudUnstructINF_vol], 2, "BUFF Grid")
 
 # export volume mesh only for visualisation:
 if CONF == 'rod':
