@@ -87,11 +87,19 @@ y_minBUFF = - 1.75*chord
 y_maxBUFF = 1.75*chord
 elemSize_rectBUFF = elemSize_rect
 
+x_minINF = - 10.0*chord
+x_maxINF = 20.0*chord
+y_minINF = - 10.0*chord
+y_maxINF = 10.0*chord
+elemSize_rectINF = 20*elemSize_rect
+
+
 rotMat = rotationMatrix([0.0, 0.0, 0.0]) # angles in degree around [axisZ, axisY, axisX]
 shiftVec = np.array([0.0, 0.0, 0.0]) # shift of the origin
 
 [ rectLine, pointTag, lineTag] = gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec)
 [ rectLineBUFF, pointTag, lineTag] = gmeshed_rectangle_contour(x_minBUFF, x_maxBUFF, y_minBUFF, y_maxBUFF, elemSize_rectBUFF, pointTag, lineTag, rotMat, shiftVec)
+[ rectLineINF, pointTag, lineTag] = gmeshed_rectangle_contour(x_minINF, x_maxINF, y_minINF, y_maxINF, elemSize_rectINF, pointTag, lineTag, rotMat, shiftVec)
 
 gmsh.model.geo.add_curve_loop( [*rectLine, *structBLouterLine], surfaceTag+1) 
 gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
@@ -104,6 +112,12 @@ gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the a
 gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
 surfaceTag = surfaceTag+1
 surf_unstrBUFF = surfaceTag
+
+gmsh.model.geo.add_curve_loop( [*rectLineBUFF, *rectLineINF], surfaceTag+1) 
+gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
+gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+surfaceTag = surfaceTag+1
+surf_unstrINF = surfaceTag
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Generate visualise and export the mesh # #
@@ -142,23 +156,23 @@ gmsh.model.mesh.generate(2)
 gmsh.model.geo.synchronize()
 
 gmsh.model.addPhysicalGroup(pb_2Dim, [*structGridSurf, surf_unstr], 1, "CFD")
-gmsh.model.addPhysicalGroup(pb_2Dim, [surf_unstrBUFF], 2, "Buff")
+gmsh.model.addPhysicalGroup(pb_2Dim, [surf_unstrBUFF, surf_unstrINF], 2, "Buff")
 
 gmsh.model.addPhysicalGroup(pb_1Dim, [*airfoilLine], 5, "airfoil skin")
 gmsh.model.addPhysicalGroup(pb_1Dim, [*rectLine], 6, "regular CAA frontier")
 
 # gmsh.model.addPhysicalGroup(pb_1Dim, [*rectLineBUFF], 5, "BUFF outer contour")
 
-ExtrudUnstructBUFF_bottom = rectLineBUFF[0]
-ExtrudUnstructBUFF_outlet = rectLineBUFF[1]
-ExtrudUnstructBUFF_top = rectLineBUFF[2]
-ExtrudUnstructBUFF_inlet = rectLineBUFF[3]
+ExtrudUnstruct_bottom = rectLineINF[0]
+ExtrudUnstruct_outlet = rectLineINF[1]
+ExtrudUnstruct_top = rectLineINF[2]
+ExtrudUnstruct_inlet = rectLineINF[3]
 
-gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstructBUFF_inlet], 7, "Inlet BC")
-gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstructBUFF_outlet], 8, "Outlet BC")
+gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstruct_inlet], 7, "Inlet BC")
+gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstruct_outlet], 8, "Outlet BC")
 
-gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstructBUFF_bottom], 9, "Bottom BC")
-gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstructBUFF_top], 10, "Top BC")
+gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstruct_bottom], 9, "Bottom BC")
+gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstruct_top], 10, "Top BC")
 
 [nodePerEntity, elemPerEntity] = countDOF()
 

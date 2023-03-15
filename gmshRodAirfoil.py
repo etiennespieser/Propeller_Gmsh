@@ -10,11 +10,11 @@ from gmshToolkit import *
 import shutil
 
 NACA_type = '0012'
-CONF = 'airfoil' # airfoil, rod, rodAirfoil
+CONF = 'rodAirfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = True
 
-gridPtsRichness = 3.0
+gridPtsRichness = 0.5
 
 gridPts_alongNACA = int(75*gridPtsRichness)
 
@@ -76,7 +76,7 @@ if not (CONF == 'rod'):
 
 if not (CONF == 'airfoil'):
 
-    rodPos = [-2.0*chord, 0.0, 0.0]
+    rodPos = [2.0*chord, 0.0, 0.0]
     rodR = 0.1*chord
     rodElemSize = 0.01*chord/gridPtsRichness
     rodBLwidth = 0.05*chord
@@ -106,8 +106,15 @@ y_minBUFF = - 1.75*chord
 y_maxBUFF = 1.75*chord
 elemSize_rectBUFF = elemSize_rect
 
+x_minINF = - 10.0*chord
+x_maxINF = 20.0*chord
+y_minINF = - 10.0*chord
+y_maxINF = 10.0*chord
+elemSize_rectINF = 20*elemSize_rect
+
 [rectLine, pointTag, lineTag] = gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec)
 [rectLineBUFF, pointTag, lineTag] = gmeshed_rectangle_contour(x_minBUFF, x_maxBUFF, y_minBUFF, y_maxBUFF, elemSize_rectBUFF, pointTag, lineTag, rotMat, shiftVec)
+[ rectLineINF, pointTag, lineTag] = gmeshed_rectangle_contour(x_minINF, x_maxINF, y_minINF, y_maxINF, elemSize_rectINF, pointTag, lineTag, rotMat, shiftVec)
 
 lRodConn = 0
 lRodArc = 1
@@ -132,6 +139,12 @@ gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles 
 surfaceTag = surfaceTag+1
 surf_unstructBUFF = surfaceTag
 
+gmsh.model.geo.add_curve_loop( [*rectLineBUFF, *rectLineINF], surfaceTag+1) 
+gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
+gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+surfaceTag = surfaceTag+1
+surf_unstructINF = surfaceTag
+
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Extrusion of the mesh # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -146,28 +159,33 @@ if not (CONF == 'rod'):
 
 [ExtrudUnstructCFD_vol, ExtrudUnstructCFD_symFace] = extrude_unstructCFD(surf_unstructCFD, span, gridPts_alongSpan)
 [ExtrudUnstructBUFF_vol, ExtrudUnstructBUFF_symFace, ExtrudUnstructBUFF_innerSkin, ExtrudUnstructBUFF_outerSkin] = extrude_unstructBUFF(surf_unstructBUFF, span, gridPts_alongSpan)
+[ExtrudUnstructINF_vol, ExtrudUnstructINF_symFace, ExtrudUnstructINF_innerSkin, ExtrudUnstructINF_outerSkin] = extrude_unstructBUFF(surf_unstructINF, span, gridPts_alongSpan)
 
 if CONF == 'rodAirfoil':
     volMesh = [*ExtrudRodBL_vol, *ExtrudAirfoildStruct_vol, *ExtrudUnstructCFD_vol]
-    surfMesh_original = [*sTL_rod, *structGridSurf, surf_unstructCFD, surf_unstructBUFF ]
-    surfMesh_symFace = [*ExtrudRodBL_symFace, *ExtrudStructAirfoil_symFace, *ExtrudUnstructCFD_symFace, *ExtrudUnstructBUFF_symFace]
+    surfMesh_original = [*sTL_rod, *structGridSurf, surf_unstructCFD, surf_unstructBUFF, surf_unstructINF ]
+    surfMesh_symFace = [*ExtrudRodBL_symFace, *ExtrudStructAirfoil_symFace, *ExtrudUnstructCFD_symFace, *ExtrudUnstructBUFF_symFace, *ExtrudUnstructINF_symFace]
 elif CONF == 'airfoil':
     volMesh = [*ExtrudAirfoildStruct_vol, *ExtrudUnstructCFD_vol]
-    surfMesh_original = [*structGridSurf, surf_unstructCFD, surf_unstructBUFF ]
-    surfMesh_symFace = [*ExtrudStructAirfoil_symFace, *ExtrudUnstructCFD_symFace, *ExtrudUnstructBUFF_symFace]
+    surfMesh_original = [*structGridSurf, surf_unstructCFD, surf_unstructBUFF, surf_unstructINF ]
+    surfMesh_symFace = [*ExtrudStructAirfoil_symFace, *ExtrudUnstructCFD_symFace, *ExtrudUnstructBUFF_symFace, *ExtrudUnstructINF_symFace]
 elif CONF == 'rod':
     volMesh = [*ExtrudRodBL_vol, *ExtrudUnstructCFD_vol]
-    surfMesh_original = [*sTL_rod, surf_unstructCFD, surf_unstructBUFF ]
-    surfMesh_symFace = [*ExtrudRodBL_symFace, *ExtrudUnstructCFD_symFace, *ExtrudUnstructBUFF_symFace]
+    surfMesh_original = [*sTL_rod, surf_unstructCFD, surf_unstructBUFF, surf_unstructINF ]
+    surfMesh_symFace = [*ExtrudRodBL_symFace, *ExtrudUnstructCFD_symFace, *ExtrudUnstructBUFF_symFace, *ExtrudUnstructINF_symFace]
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Set periodic bounday condition # # 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-# periodicity along z axis at separation of span
-gmsh.model.geo.synchronize()
-gmsh.model.mesh.setPeriodic(pb_2Dim, [*surfMesh_symFace], [*surfMesh_original], [1,0,0,0, 0,1,0,0, 0,0,1,span, 0,0,0,1])
-# from here on, "surfMesh_symFace" and "surfMesh_original" refer to the same elements.
+###
+# Instead of enforcing the symmetry BC in Gmsh (periodic hex mesh not supported in mfem-4.5),
+### # periodicity along z axis at separation of span
+### gmsh.model.geo.synchronize()
+### gmsh.model.mesh.setPeriodic(pb_2Dim, [*surfMesh_symFace], [*surfMesh_original], [1,0,0,0, 0,1,0,0, 0,0,1,span, 0,0,0,1])
+### # from here on, "surfMesh_symFace" and "surfMesh_original" refer to the same elements.
+# periodise the mesh in MFEM following https://mfem.org/howto/periodic-boundaries/
+
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Generate visualise and export the mesh # #
@@ -209,15 +227,13 @@ gmsh.model.geo.synchronize()
 [nodePerEntity, elemPerEntity] = countDOF()
 
 gmsh.model.addPhysicalGroup(pb_3Dim, [*volMesh], 1, "CFD Grid")
-gmsh.model.addPhysicalGroup(pb_3Dim, [*ExtrudUnstructBUFF_vol], 2, "BUFF Grid")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_vol, *ExtrudUnstructINF_vol], 2, "BUFF Grid")
 
 # export volume mesh only for visualisation:
 if CONF == 'rod':
     gmsh.write("rod_"+str(sum(elemPerEntity))+"elems.vtk")
 else:
     gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems.vtk")
-
-gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 3, "Periodic BC")
 
 if not (CONF == 'airfoil'):
     gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_rodHardWall], 4, "Rod Hard Wall")
@@ -226,16 +242,19 @@ if not (CONF == 'rod'):
 
 gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_innerSkin], 6, "BUFF inner Wrap")
 
-ExtrudUnstructBUFF_inlet = ExtrudUnstructBUFF_outerSkin[0]
-ExtrudUnstructBUFF_bottom = ExtrudUnstructBUFF_outerSkin[1]
-ExtrudUnstructBUFF_outlet = ExtrudUnstructBUFF_outerSkin[2]
-ExtrudUnstructBUFF_top = ExtrudUnstructBUFF_outerSkin[3]
+ExtrudUnstructINF_inlet = ExtrudUnstructINF_outerSkin[0]
+ExtrudUnstructINF_bottom = ExtrudUnstructINF_outerSkin[1]
+ExtrudUnstructINF_outlet = ExtrudUnstructINF_outerSkin[2]
+ExtrudUnstructINF_top = ExtrudUnstructINF_outerSkin[3]
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_inlet], 7, "Inlet BC")
-gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_outlet], 8, "Outlet BC")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructINF_inlet], 7, "Inlet BC")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructINF_outlet], 8, "Outlet BC")
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_bottom], 9, "Bottom BC")
-gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructBUFF_top], 10, "Top BC")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructINF_bottom], 9, "Bottom BC")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructINF_top], 10, "Top BC")
+
+gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 11, "Periodic BC 1")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_symFace], 12, "Periodic BC 2")
 
 
 # Write mesh data:

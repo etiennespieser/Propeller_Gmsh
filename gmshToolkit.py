@@ -2814,11 +2814,11 @@ def extrude_unstructBUFF(surf_unstructBUFF, span, gridPts_alongSpan):
     # Extract surface tags of unstruct BUFF
     ExtrudUnstructBUFF_symFace = []
     ExtrudUnstructBUFF_symFace.append(ExtrudUnstructBUFF[0][1]) # unstruct CFD extruded periodic face
-    ExtrudUnstructBUFF_innerSkin = []
+    ExtrudUnstructBUFF_innerSkin = [] # below we use the order 5,2,3,4 for the inner skin to comply with the outer skin ordering
+    ExtrudUnstructBUFF_innerSkin.append(ExtrudUnstructBUFF[5][1]) # untruct CFD junction with BUFF
     ExtrudUnstructBUFF_innerSkin.append(ExtrudUnstructBUFF[2][1]) # untruct CFD junction with BUFF
     ExtrudUnstructBUFF_innerSkin.append(ExtrudUnstructBUFF[3][1]) # untruct CFD junction with BUFF
     ExtrudUnstructBUFF_innerSkin.append(ExtrudUnstructBUFF[4][1]) # untruct CFD junction with BUFF
-    ExtrudUnstructBUFF_innerSkin.append(ExtrudUnstructBUFF[5][1]) # untruct CFD junction with BUFF
     ExtrudUnstructBUFF_bottom = []
     ExtrudUnstructBUFF_bottom.append(ExtrudUnstructBUFF[6][1]) # untruct CFD junction with BUFF
     ExtrudUnstructBUFF_outlet = []
