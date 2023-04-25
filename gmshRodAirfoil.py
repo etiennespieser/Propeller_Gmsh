@@ -10,11 +10,11 @@ from gmshToolkit import *
 import shutil
 
 NACA_type = '0012'
-CONF = 'rodAirfoil' # airfoil, rod, rodAirfoil
+CONF = 'airfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = True
 
-gridPtsRichness = 1.0
+gridPtsRichness = 1.8
 
 gridPts_alongNACA = int(75*gridPtsRichness)
 
