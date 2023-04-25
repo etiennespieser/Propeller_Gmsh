@@ -10,7 +10,7 @@ from gmshToolkit import *
 import shutil
 
 NACA_type = '0012'
-CONF = 'airfoil' # airfoil, rod, rodAirfoil
+CONF = 'rodAirfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = True
 
@@ -266,6 +266,21 @@ if CONF == 'rod':
     gmsh.write("rod_"+str(sum(elemPerEntity))+"elems.msh")
 else:
     gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems.msh")
+
+# export surfaces where the solution will be exported.
+gmsh.model.removePhysicalGroups()
+if not (CONF == 'airfoil'):
+    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_rodHardWall], 1, "Rod Hard Wall")
+    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_rodSurf.msh")
+
+gmsh.model.removePhysicalGroups()
+if not (CONF == 'rod'):
+    gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_airfoilHardWall], 1, "Airfoil Hard Wall")
+    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_airfoilSurf.msh")
+
+gmsh.model.removePhysicalGroups()
+gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 1, "Airfoil Hard Wall")
+gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_sideSurf.msh")
 
 # delete the "__pycache__" folder:
 try:
