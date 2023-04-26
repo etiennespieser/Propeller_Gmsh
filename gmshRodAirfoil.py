@@ -279,7 +279,7 @@ if not (CONF == 'rod'):
     gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_airfoilSurf.msh")
 
 gmsh.model.removePhysicalGroups()
-gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 1, "Airfoil Hard Wall")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 1, "Periodic plan")
 gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_sideSurf.msh")
 
 # delete the "__pycache__" folder:
