@@ -14,7 +14,7 @@ CONF = 'airfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = True
 
-gridPtsRichness = 1.8
+gridPtsRichness = 1.0
 
 gridPts_alongNACA = int(75*gridPtsRichness)
 

@@ -11,7 +11,7 @@ NACA_type = '0012'
 
 bluntTrailingEdge = True
 
-gridPtsRichness = 1.0
+gridPtsRichness = 0.5
 
 gridPts_alongNACA = int(75*gridPtsRichness)
 
@@ -131,7 +131,22 @@ gmsh.model.geo.synchronize()
 # gmsh.option.setNumber("Mesh.Smoothing", 3)
 # gmsh.option.setNumber("Mesh.Algorithm", 11) # mesh 2D
 gmsh.option.setNumber("Mesh.RecombineAll", 1)
+
 gmsh.model.mesh.generate(2)
+
+### tests to generate high order meshes:
+# # set order after "generate" http://onelab.info/pipermail/gmsh/2019/012941.html
+# # alssee: https://gitlab.onelab.info/gmsh/gmsh/-/issues/527
+# elemOrder = 2 # (1=linear elements, N (<6) = elements of higher order)
+# gmsh.model.mesh.setOrder(elemOrder) 
+# gmsh.option.setNumber("Mesh.SecondOrderLinear", 0)
+# # gmsh.option.setNumber("Mesh.HighOrderMaxInnerAngle", 0.5) 
+# # gmsh.option.setNumber("Mesh.NumSubEdges", elemOrder) # just visualisation ??
+# # gmsh.option.setNumber("Mesh.HighOrderPoissonRatio", 0.5) # Poisson ratio of the material used in the elastic smoother for high order meshes. Must be between -1.0 and 0.5, excluded
+# gmsh.option.setNumber("Mesh.HighOrderOptimize", 2) # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving)
+# # gmsh.model.mesh.optimize('Netgen', True) # https://gitlab.onelab.info/gmsh/gmsh/blob/gmsh_4_8_0/demos/api/opt.py#L12
+### -------------------------------------
+
 
 # generating a high quality fully hex mesh is a tall order: 
 # https://gitlab.onelab.info/gmsh/gmsh/-/issues/784
@@ -180,6 +195,7 @@ gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstruct_top], 10, "Top BC")
 gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is selected "Mesh.SaveAll=1" discards the group definitions (to be avoided!).
 
 gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.msh")
+gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.vtk")
 
 # delete the "__pycache__" folder:
 try:
