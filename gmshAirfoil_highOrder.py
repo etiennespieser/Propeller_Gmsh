@@ -400,7 +400,7 @@ def gmeshed_airfoil_HO(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec):
     gmsh.model.geo.mesh.setTransfiniteCurve(line_B, gridPts_inBL, "Progression", gridGeomProg_inBL)
 
     gmsh.model.geo.add_curve_loop([airfoilExtradoOffset_lineTag, -line_G, -airfoilExtrado_lineTag, line_A], surfaceTag+1)
-    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1) # use addSurfaceFilling() and not addPlaneSurface() to work with "Mesh.HighOrderOptimize"
     gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
     gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
     surfaceTag = surfaceTag+1 
@@ -638,11 +638,13 @@ bluntTrailingEdge = True
 
 gridPtsRichness = 0.2
 
-elemOrder = 5
+elemOrder = 3
+highOrderBLoptim = 3 # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove high-order optimisation.
+
 
 gridPts_alongNACA = 15 # int(75*gridPtsRichness)
 
-gridPts_inBL = int(15*gridPtsRichness) # > 2 for split into fully hex mesh
+gridPts_inBL = 10*int(15*gridPtsRichness) # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.05
 
 TEpatchGridFlaringAngle = 30 # deg
@@ -714,12 +716,9 @@ gmsh.option.setNumber("Mesh.RecombineAll", 1)
 # https://gitlab.onelab.info/gmsh/gmsh/blob/gmsh_4_11_1/tutorials/python/t5.py
 
 
-# gmsh.option.setNumber("Mesh.HighOrderOptimize", 0) # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving)
-# gmsh.option.setNumber("Mesh.HighOrderNumLayers", gridGeomProg_inBL)
-
 gmsh.option.setNumber("Mesh.ElementOrder", elemOrder) # gmsh.model.mesh.setOrder(elemOrder)
 gmsh.option.setNumber("Mesh.SecondOrderLinear", 0)
-gmsh.option.setNumber("Mesh.HighOrderOptimize", 2)
+gmsh.option.setNumber("Mesh.HighOrderOptimize", highOrderBLoptim) # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving)
 gmsh.option.setNumber("Mesh.NumSubEdges", elemOrder) # just visualisation ??
 
 gmsh.model.mesh.generate(2)
