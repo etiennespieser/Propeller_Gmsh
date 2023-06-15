@@ -9,6 +9,14 @@ import shutil
 elemOrder = 10 # (1=linear elements, N (<6) = elements of higher order)
 
 # https://gitlab.onelab.info/gmsh/gmsh/-/issues/1128
+# https://github.com/mfem/mfem/issues/2032
+# https://www.sciencedirect.com/science/article/pii/S0021999113004956?ref=pdf_download&fr=RR-2&rr=7d66d5048c5e10ac
+
+# https://gitlab.onelab.info/gmsh/gmsh/-/issues/527
+
+# https://wiki.freecad.org/FEM_MeshGmshFromShape
+
+# https://gitlab.onelab.info/gmsh/gmsh/blob/gmsh_4_11_1/tutorials/python/t5.py
 
 # Initialize gmsh:
 gmsh.initialize()

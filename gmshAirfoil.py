@@ -9,9 +9,11 @@ import shutil
 
 NACA_type = '0012'
 
-bluntTrailingEdge = True
+bluntTrailingEdge = False
 
 gridPtsRichness = 0.5
+elemOrder = 5
+highOrderBLoptim = 0 # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove high-order optimisation.
 
 gridPts_alongNACA = int(75*gridPtsRichness)
 
@@ -65,7 +67,8 @@ shiftVec = [0.0, 0.0, 0.0] # shift of the airfoil origin
 structTag = [pointTag, lineTag, surfaceTag]
 GeomSpec = [NACA_type, bluntTrailingEdge, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
 GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
-[pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
+# [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
+[pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil_HO(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
 
 airfoilLine = returnAirfoilContour(lineTag_list, bluntTrailingEdge)
 structBLouterLine = returnStructGridOuterContour(lineTag_list, bluntTrailingEdge)
@@ -132,21 +135,16 @@ gmsh.model.geo.synchronize()
 # gmsh.option.setNumber("Mesh.Algorithm", 11) # mesh 2D
 gmsh.option.setNumber("Mesh.RecombineAll", 1)
 
+
+# https://gitlab.onelab.info/gmsh/gmsh/blob/gmsh_4_11_1/tutorials/python/t5.py
+
+
+gmsh.option.setNumber("Mesh.ElementOrder", elemOrder) # gmsh.model.mesh.setOrder(elemOrder)
+gmsh.option.setNumber("Mesh.SecondOrderLinear", 0)
+gmsh.option.setNumber("Mesh.HighOrderOptimize", highOrderBLoptim) # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving)
+gmsh.option.setNumber("Mesh.NumSubEdges", elemOrder) # just visualisation ??
+
 gmsh.model.mesh.generate(2)
-
-### tests to generate high order meshes:
-# # set order after "generate" http://onelab.info/pipermail/gmsh/2019/012941.html
-# # alssee: https://gitlab.onelab.info/gmsh/gmsh/-/issues/527
-# elemOrder = 2 # (1=linear elements, N (<6) = elements of higher order)
-# gmsh.model.mesh.setOrder(elemOrder) 
-# gmsh.option.setNumber("Mesh.SecondOrderLinear", 0)
-# # gmsh.option.setNumber("Mesh.HighOrderMaxInnerAngle", 0.5) 
-# # gmsh.option.setNumber("Mesh.NumSubEdges", elemOrder) # just visualisation ??
-# # gmsh.option.setNumber("Mesh.HighOrderPoissonRatio", 0.5) # Poisson ratio of the material used in the elastic smoother for high order meshes. Must be between -1.0 and 0.5, excluded
-# gmsh.option.setNumber("Mesh.HighOrderOptimize", 2) # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving)
-# # gmsh.model.mesh.optimize('Netgen', True) # https://gitlab.onelab.info/gmsh/gmsh/blob/gmsh_4_8_0/demos/api/opt.py#L12
-### -------------------------------------
-
 
 # generating a high quality fully hex mesh is a tall order: 
 # https://gitlab.onelab.info/gmsh/gmsh/-/issues/784
@@ -189,6 +187,8 @@ gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstruct_outlet], 8, "Outlet BC")
 gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstruct_bottom], 9, "Bottom BC")
 gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstruct_top], 10, "Top BC")
 
+# gmsh.model.setColor([(2, 3)], 255, 0, 0)  # Red
+
 [nodePerEntity, elemPerEntity] = countDOF()
 
 # Write mesh data:
@@ -196,6 +196,8 @@ gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is sel
 
 gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.msh")
 gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.vtk")
+# paraview support for High-order meshes: https://www.kitware.com/high-order-using-gmsh-reader-plugin-in-paraview/
+
 
 # delete the "__pycache__" folder:
 try:
