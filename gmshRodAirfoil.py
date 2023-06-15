@@ -10,11 +10,13 @@ from gmshToolkit import *
 import shutil
 
 NACA_type = '0012'
-CONF = 'airfoil' # airfoil, rod, rodAirfoil
+CONF = 'rodAirfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = True
 
-gridPtsRichness = 1.0
+gridPtsRichness = 0.5
+elemOrder = 2
+highOrderBLoptim = 0 # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
 
 gridPts_alongNACA = int(75*gridPtsRichness)
 
@@ -65,7 +67,8 @@ if not (CONF == 'rod'):
     structTag = [pointTag, lineTag, surfaceTag]
     GeomSpec = [NACA_type, bluntTrailingEdge, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
     GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
-    [pTL_airfoil, lTL_airfoil, sTL_airfoil, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec) 
+    # [pTL_airfoil, lTL_airfoil, sTL_airfoil, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec) 
+    [pTL_airfoil, lTL_airfoil, sTL_airfoil, pointTag, lineTag, surfaceTag] = gmeshed_airfoil_HO(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec) 
 
     bladeLine = returnStructGridOuterContour(lTL_airfoil, bluntTrailingEdge)
     structGridSurf = returnStructGridSide(sTL_airfoil, bluntTrailingEdge)
@@ -88,7 +91,7 @@ if not (CONF == 'airfoil'):
     structTag = [pointTag, lineTag, surfaceTag]
     RodGeomSpec = [rodPos, rodR, rodBLwidth]
     RodGridPtsSpec = [gridPts_alongRod, gridPts_inRodBL, gridGeomProg_inRodBL]
-    [pTL_rod, lTL_rod, sTL_rod, pointTag, lineTag, surfaceTag] = gmeshed_disk(structTag, RodGeomSpec, RodGridPtsSpec, rotMat, shiftVec)
+    [pTL_rod, lTL_rod, sTL_rod, pointTag, lineTag, surfaceTag] = gmeshed_disk(structTag, RodGeomSpec, RodGridPtsSpec, rotMat, shiftVec) # works for high-order
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Creation of the exterior region # #
@@ -154,7 +157,8 @@ if not (CONF == 'airfoil'):
     surfMesh_rodHardWall = [*ExtrudRodBL_skin]
     
 if not (CONF == 'rod'):
-    [ExtrudAirfoildStruct_vol, ExtrudStructAirfoil_symFace, ExtrudStructAirfoil_skin] = extrude_airfoilStruct(sTL_airfoil, bluntTrailingEdge, gridPts_alongNACA, span, gridPts_alongSpan)
+    # [ExtrudAirfoildStruct_vol, ExtrudStructAirfoil_symFace, ExtrudStructAirfoil_skin] = extrude_airfoilStruct(sTL_airfoil, bluntTrailingEdge, gridPts_alongNACA, span, gridPts_alongSpan)
+    [ExtrudAirfoildStruct_vol, ExtrudStructAirfoil_symFace, ExtrudStructAirfoil_skin] = extrude_airfoilStruct_HO(sTL_airfoil, bluntTrailingEdge, gridPts_alongNACA, span, gridPts_alongSpan)
     surfMesh_airfoilHardWall = [*ExtrudStructAirfoil_skin]
 
 [ExtrudUnstructCFD_vol, ExtrudUnstructCFD_symFace] = extrude_unstructCFD(surf_unstructCFD, span, gridPts_alongSpan)
@@ -198,7 +202,12 @@ gmsh.model.geo.synchronize()
 # 2D pavement
 # gmsh.option.setNumber("Mesh.Smoothing", 3)
 # gmsh.option.setNumber("Mesh.Algorithm", 11) # mesh 2D
-# gmsh.option.setNumber("Mesh.RecombineAll", 1)
+gmsh.option.setNumber("Mesh.RecombineAll", 1)
+gmsh.option.setNumber("Mesh.ElementOrder", elemOrder) # gmsh.model.mesh.setOrder(elemOrder)
+gmsh.option.setNumber("Mesh.SecondOrderLinear", 0)
+gmsh.option.setNumber("Mesh.HighOrderOptimize", highOrderBLoptim) # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving)
+gmsh.option.setNumber("Mesh.NumSubEdges", elemOrder) # just visualisation ??
+
 
 gmsh.model.mesh.generate()
 
@@ -256,12 +265,10 @@ gmsh.model.addPhysicalGroup(pb_2Dim, [*ExtrudUnstructINF_top], 10, "Top BC")
 gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 11, "Periodic BC 1")
 gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_symFace], 12, "Periodic BC 2")
 
-
 # Write mesh data:
 gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is selected "Mesh.SaveAll=1" discards the group definitions (to be avoided!).
 
 # export mesh with all tags for computation:
-
 if CONF == 'rod':
     gmsh.write("rod_"+str(sum(elemPerEntity))+"elems.msh")
 else:

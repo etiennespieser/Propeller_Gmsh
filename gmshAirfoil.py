@@ -13,7 +13,7 @@ bluntTrailingEdge = False
 
 gridPtsRichness = 0.5
 elemOrder = 5
-highOrderBLoptim = 0 # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove high-order optimisation.
+highOrderBLoptim = 0 # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
 
 gridPts_alongNACA = int(75*gridPtsRichness)
 
@@ -134,11 +134,6 @@ gmsh.model.geo.synchronize()
 # gmsh.option.setNumber("Mesh.Smoothing", 3)
 # gmsh.option.setNumber("Mesh.Algorithm", 11) # mesh 2D
 gmsh.option.setNumber("Mesh.RecombineAll", 1)
-
-
-# https://gitlab.onelab.info/gmsh/gmsh/blob/gmsh_4_11_1/tutorials/python/t5.py
-
-
 gmsh.option.setNumber("Mesh.ElementOrder", elemOrder) # gmsh.model.mesh.setOrder(elemOrder)
 gmsh.option.setNumber("Mesh.SecondOrderLinear", 0)
 gmsh.option.setNumber("Mesh.HighOrderOptimize", highOrderBLoptim) # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving)

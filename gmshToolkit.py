@@ -3342,6 +3342,59 @@ def extrude_airfoilStruct(sTL_airfoil, bluntTrailingEdge, gridPts_alongNACA, spa
 # ******************************************************************************************************************************************************************************
 # ******************************************************************************************************************************************************************************
 
+def extrude_airfoilStruct_HO(sTL_airfoil, bluntTrailingEdge, gridPts_alongNACA, span, gridPts_alongSpan):
+
+    sairfoil = 0
+    sBLstructGrid = 1
+    sBLstructGridUp = 2
+    sBLstructGridLow = 3
+    sTEpatchUp = 4
+    sTEpatchLow = 5
+    sTEpatchMidUp = 6
+    sTEpatchMidLow = 7
+    swakeUp = 8
+    swakeLow = 9
+    swakeMidUp = 10
+    swakeMidLow = 11
+
+    ### Extrude struct Airfoil
+    airfoilStructDoublet = []
+    for elem in sTL_airfoil:
+        if isinstance(elem, int): 
+            if not(elem==sTL_airfoil[sairfoil]) and not(elem==-1): # in order not to extrude the airfoil interior and the empty tags
+                airfoilStructDoublet.append((pb_2Dim,elem))
+        else:
+            if not(elem==sTL_airfoil[sBLstructGrid]): # in order not to generate twice the elemenst of the unstruct BL grid 
+                for subElem in elem:
+                    airfoilStructDoublet.append((pb_2Dim,subElem))
+    ExtrudAirfoildStruct = gmsh.model.geo.extrude(airfoilStructDoublet, 0, 0, span, [gridPts_alongSpan], recombine=True)
+
+    # Extract volume tags of struct Airfoil
+    ExtrudAirfoildStruct_vol = []
+    for i in range(len(ExtrudAirfoildStruct)):
+        if ExtrudAirfoildStruct[i][0] == 3:  
+            ExtrudAirfoildStruct_vol.append(ExtrudAirfoildStruct[i][1])
+
+    # Extract surface tags of struct Airfoil
+    ExtrudStructAirfoil_skin = []
+    ExtrudStructAirfoil_symFace = []
+    for i in range(len(ExtrudAirfoildStruct)):
+        if ExtrudAirfoildStruct[i][0] == 3:  
+            ExtrudStructAirfoil_symFace.append(ExtrudAirfoildStruct[i-1][1]) # Struct Airfoil extruded periodic face
+
+    ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[5][1]) # Airfoil extrados
+    ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[17][1]) # Airfoil intrados
+    if bluntTrailingEdge:
+        ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[36][1]) # Addition of the trailing edge surfaces
+        ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[42][1]) # Addition of the trailing edge surfaces
+
+    return ExtrudAirfoildStruct_vol, ExtrudStructAirfoil_symFace, ExtrudStructAirfoil_skin
+
+
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+
 def extrude_unstructCFD(surf_unstructCFD, span, gridPts_alongSpan):
 
     ### Extrude unstructCFD domain
