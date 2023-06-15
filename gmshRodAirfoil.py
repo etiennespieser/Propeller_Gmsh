@@ -10,12 +10,12 @@ from gmshToolkit import *
 import shutil
 
 NACA_type = '0012'
-CONF = 'rodAirfoil' # airfoil, rod, rodAirfoil
+CONF = 'airfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = True
 
-gridPtsRichness = 0.5
-elemOrder = 2
+gridPtsRichness = 0.2
+elemOrder = 5
 highOrderBLoptim = 0 # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
 
 gridPts_alongNACA = int(75*gridPtsRichness)
@@ -113,7 +113,7 @@ x_minINF = - 10.0*chord
 x_maxINF = 20.0*chord
 y_minINF = - 10.0*chord
 y_maxINF = 10.0*chord
-elemSize_rectINF = 20*elemSize_rect
+elemSize_rectINF = 10*elemSize_rect
 
 [rectLine, pointTag, lineTag] = gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec)
 [rectLineBUFF, pointTag, lineTag] = gmeshed_rectangle_contour(x_minBUFF, x_maxBUFF, y_minBUFF, y_maxBUFF, elemSize_rectBUFF, pointTag, lineTag, rotMat, shiftVec)

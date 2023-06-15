@@ -1235,7 +1235,7 @@ def gmeshed_airfoil_HO(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec): # hi
 
 
     # # connection to regular CAA domain:
-    surf_airfoil = [-1]
+    surf_airfoil = -1
     pointTag_list = [point_LE, point_TE, point_TEu, point_TEl, point_TEwake, point_TEfarWake, point_left, point_up, point_upRight, point_upFarRight, point_low, point_lowRight, point_lowFarRight, point_upMidRight, point_lowMidRight, point_upMidFarRight, point_lowMidFarRight]
     lineTag_list = [[*line_airfoilUp], [*line_airfoilLow], [*line_BLup], [*line_BLlow], [*line_BLradii], line_A, line_B, line_C, line_D, line_Eu, line_El, line_Fu, line_Fl, line_G, line_H, line_I, line_Ju, line_Jl, line_K, line_L, line_M, line_N, line_O, line_P, line_Ar, line_Br, line_Aer, line_Ber]
     surfaceTag_list = [surf_airfoil, [*surf_BLstructGrid], surf_BLstructGridUp, surf_BLstructGridLow, surf_TEpatchUp, surf_TEpatchLow, surf_TEpatchMidUp, surf_TEpatchMidLow, surf_wakeUp, surf_wakeLow, surf_wakeMidUp, surf_wakeMidLow]
@@ -3373,6 +3373,7 @@ def extrude_airfoilStruct_HO(sTL_airfoil, bluntTrailingEdge, gridPts_alongNACA, 
     ExtrudAirfoildStruct_vol = []
     for i in range(len(ExtrudAirfoildStruct)):
         if ExtrudAirfoildStruct[i][0] == 3:  
+            print("***** tag"+str(i))
             ExtrudAirfoildStruct_vol.append(ExtrudAirfoildStruct[i][1])
 
     # Extract surface tags of struct Airfoil
