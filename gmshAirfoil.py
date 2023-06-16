@@ -11,14 +11,14 @@ NACA_type = '0012'
 
 bluntTrailingEdge = False
 
-gridPtsRichness = 0.5
-elemOrder = 5
+gridPtsRichness = 1
+elemOrder = 10
 highOrderBLoptim = 0 # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
 
 gridPts_alongNACA = int(75*gridPtsRichness)
 
 gridPts_inBL = int(15*gridPtsRichness) # > 2 for split into fully hex mesh
-gridGeomProg_inBL = 1.05
+gridGeomProg_inBL = 1.15
 
 TEpatchGridFlaringAngle = 30 # deg
 gridPts_alongTEpatch = int(8*gridPtsRichness) # > 2 for split into fully hex mesh
@@ -189,8 +189,8 @@ gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstruct_top], 10, "Top BC")
 # Write mesh data:
 gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is selected "Mesh.SaveAll=1" discards the group definitions (to be avoided!).
 
-gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.msh")
-gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems.vtk")
+gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_o"+str(elemOrder)+".msh")
+gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_o"+str(elemOrder)+".vtk")
 # paraview support for High-order meshes: https://www.kitware.com/high-order-using-gmsh-reader-plugin-in-paraview/
 
 
