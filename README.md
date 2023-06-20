@@ -10,6 +10,8 @@ These scripts run with python 3 and assume gmsh-api is installed, e.g. using,
 pip install gmsh
 ```
 
+To enable the parallel version of the gmsh-api, follow: https://gitlab.onelab.info/gmsh/gmsh/-/issues/1422
+
 Bug tracking and sugestions are welcome.
 For general documentation, refer to: 
    + https://gmsh.info/doc/texinfo/gmsh.html
