@@ -14,8 +14,8 @@ CONF = 'airfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = False
 
-gridPtsRichness = 0.67 # 0.67 corresponds to 50 cells along the airfoil
-elemOrder = 9
+gridPtsRichness = 0.34 # 0.67 corresponds to 50 cells along the airfoil
+elemOrder = 1
 highOrderBLoptim = 4 # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
 
 gridPts_alongNACA = int(75*gridPtsRichness)
@@ -282,11 +282,11 @@ if not (CONF == 'airfoil'):
 gmsh.model.removePhysicalGroups()
 if not (CONF == 'rod'):
     gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_airfoilHardWall], 1, "Airfoil Hard Wall")
-    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_airfoilSurf_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_mo"+str(elemOrder)+".msh")
+    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_mo"+str(elemOrder)+"_airfoilSurf.msh")
 
 gmsh.model.removePhysicalGroups()
 gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 1, "Periodic plan")
-gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_sideSurf_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_mo"+str(elemOrder)+".msh")
+gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_mo"+str(elemOrder)+"_sideSurf.msh")
 
 # delete the "__pycache__" folder:
 try:
