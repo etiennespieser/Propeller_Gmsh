@@ -15,8 +15,9 @@ CONF = 'airfoil' # airfoil, rod, rodAirfoil
 bluntTrailingEdge = False
 
 gridPtsRichness = 0.34 # 0.67 corresponds to 50 cells along the airfoil
-elemOrder = 1
-highOrderBLoptim = 4 # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
+elemOrder = 9 # max elemOrder is 10
+highOrderBLoptim = 4 # by default choose 4. (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
+
 
 gridPts_alongNACA = int(75*gridPtsRichness)
 
