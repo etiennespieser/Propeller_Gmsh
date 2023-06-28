@@ -10,9 +10,9 @@ from gmshToolkit import *
 import shutil
 
 NACA_type = '0012'
-CONF = 'aSirfoil' # airfoil, rod, rodAirfoil
+CONF = 'airfoil' # airfoil, rod, rodAirfoil
 
-bluntTrailingEdge = True
+bluntTrailingEdge = False
 
 gridPtsRichness = 0.34 # 0.67 corresponds to 50 cells along the airfoil
 elemOrder = 3 # max elemOrder is 10
