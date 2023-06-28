@@ -10,12 +10,12 @@ from gmshToolkit import *
 import shutil
 
 NACA_type = '0012'
-CONF = 'airfoil' # airfoil, rod, rodAirfoil
+CONF = 'aSirfoil' # airfoil, rod, rodAirfoil
 
-bluntTrailingEdge = False
+bluntTrailingEdge = True
 
 gridPtsRichness = 0.34 # 0.67 corresponds to 50 cells along the airfoil
-elemOrder = 9 # max elemOrder is 10
+elemOrder = 3 # max elemOrder is 10
 highOrderBLoptim = 4 # by default choose 4. (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
 
 
@@ -278,7 +278,7 @@ else:
 gmsh.model.removePhysicalGroups()
 if not (CONF == 'airfoil'):
     gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_rodHardWall], 1, "Rod Hard Wall")
-    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_rodSurf_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_mo"+str(elemOrder)+".msh")
+    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_mo"+str(elemOrder)+"_rodSurf.msh")
 
 gmsh.model.removePhysicalGroups()
 if not (CONF == 'rod'):

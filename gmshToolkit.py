@@ -3383,11 +3383,11 @@ def extrude_airfoilStruct_HO(sTL_airfoil, bluntTrailingEdge, gridPts_alongNACA, 
         if ExtrudAirfoildStruct[i][0] == 3:  
             ExtrudStructAirfoil_symFace.append(ExtrudAirfoildStruct[i-1][1]) # Struct Airfoil extruded periodic face
 
-    ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[5][1]) # Airfoil extrados
-    ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[17][1]) # Airfoil intrados
+    ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[4][1]) # Airfoil extrados
+    ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[10][1]) # Airfoil intrados
     if bluntTrailingEdge:
-        ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[36][1]) # Addition of the trailing edge surfaces
-        ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[42][1]) # Addition of the trailing edge surfaces
+        ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[29][1]) # Addition of the trailing edge surfaces
+        ExtrudStructAirfoil_skin.append(ExtrudAirfoildStruct[35][1]) # Addition of the trailing edge surfaces
 
     return ExtrudAirfoildStruct_vol, ExtrudStructAirfoil_symFace, ExtrudStructAirfoil_skin
 
