@@ -15,7 +15,7 @@ CONF = 'airfoil' # airfoil, rod, rodAirfoil
 bluntTrailingEdge = False
 
 gridPtsRichness = 0.67 # 0.67 corresponds to 50 cells along the airfoil
-elemOrder = 8 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
+elemOrder = 3 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
 highOrderBLoptim = 4 # by default choose 4. (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
 
 
@@ -114,7 +114,7 @@ x_minINF = - 10.0*chord
 x_maxINF = 20.0*chord
 y_minINF = - 10.0*chord
 y_maxINF = 10.0*chord
-elemSize_rectINF = 10*elemSize_rect
+elemSize_rectINF = 20*elemSize_rect
 
 [rectLine, pointTag, lineTag] = gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec)
 [rectLineBUFF, pointTag, lineTag] = gmeshed_rectangle_contour(x_minBUFF, x_maxBUFF, y_minBUFF, y_maxBUFF, elemSize_rectBUFF, pointTag, lineTag, rotMat, shiftVec)
