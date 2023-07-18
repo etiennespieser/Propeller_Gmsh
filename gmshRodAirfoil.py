@@ -14,8 +14,8 @@ CONF = 'airfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = False
 
-gridPtsRichness = 0.67 # 0.67 corresponds to 50 cells along the airfoil
-elemOrder = 3 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
+gridPtsRichness = 0.5 # 0.67 corresponds to 50 cells along the airfoil
+elemOrder = 1 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
 highOrderBLoptim = 4 # by default choose 4. (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
 
 
@@ -27,12 +27,12 @@ gridPts_inBL = int(15*gridPtsRichness) # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.15
 
 TEpatchGridFlaringAngle = 30 # deg
-gridPts_alongTEpatch = int(8*gridPtsRichness) # > 2 for split into fully hex mesh
+gridPts_alongTEpatch = int(10*gridPtsRichness) # > 2 for split into fully hex mesh
 gridGeomProg_alongTEpatch = 1.05
 
 wakeGridFlaringAngle = 10 # deg
-gridPts_alongWake = int(25*gridPtsRichness) # > 2 for split into fully hex mesh
-gridGeomProg_alongWake = 1.0
+gridPts_alongWake = int(30*gridPtsRichness) # > 2 for split into fully hex mesh
+gridGeomProg_alongWake = 1.01
 
 pitch = 12.0 # deg
 chord = 0.2 # m 
