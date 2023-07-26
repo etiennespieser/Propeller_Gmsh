@@ -11,9 +11,9 @@ NACA_type = '0012'
 
 bluntTrailingEdge = False
 
-gridPts_alongNACA = 22 # choose > 21 (unknown reason). Other parameters scale with this one
-elemOrder = 5 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
-highOrderBLoptim = 4 # by default choose 4. (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
+gridPts_alongNACA = 25 # Other parameters scale with this one. If for small "gridPts_alongNACA", LE curvature fails, change "highOrderBLoptim".
+elemOrder = 3 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
+highOrderBLoptim = 3 # by default choose 4. (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
 
 gridPts_inBL = int(20*gridPts_alongNACA/75.0) # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.25
