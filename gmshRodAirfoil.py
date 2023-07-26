@@ -14,25 +14,23 @@ CONF = 'airfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = False
 
-gridPtsRichness = 0.5 # 0.67 corresponds to 50 cells along the airfoil
-elemOrder = 4 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
+gridPts_alongNACA = 30 # other parameters scale with this one
+elemOrder = 5 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
 highOrderBLoptim = 4 # by default choose 4. (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
 
 
-gridPts_alongNACA = int(75*gridPtsRichness)
+gridPts_alongSpan = int(20*gridPts_alongNACA/75.0)
 
-gridPts_alongSpan = int(20*gridPtsRichness)
-
-gridPts_inBL = int(15*gridPtsRichness) # > 2 for split into fully hex mesh
-gridGeomProg_inBL = 1.15
+gridPts_inBL = int(20*gridPts_alongNACA/75.0) # > 2 for split into fully hex mesh
+gridGeomProg_inBL = 1.25
 
 TEpatchGridFlaringAngle = 30 # deg
-gridPts_alongTEpatch = int(10*gridPtsRichness) # > 2 for split into fully hex mesh
-gridGeomProg_alongTEpatch = 1.05
+gridPts_alongTEpatch = int(13*gridPts_alongNACA/75.0) # > 2 for split into fully hex mesh
+gridGeomProg_alongTEpatch = 1.10
 
 wakeGridFlaringAngle = 10 # deg
-gridPts_alongWake = int(30*gridPtsRichness) # > 2 for split into fully hex mesh
-gridGeomProg_alongWake = 1.01
+gridPts_alongWake = int(30*gridPts_alongNACA/75.0) # > 2 for split into fully hex mesh
+gridGeomProg_alongWake = 1.0
 
 pitch = 12.0 # deg
 chord = 0.2 # m 
@@ -82,11 +80,11 @@ if not (CONF == 'airfoil'):
 
     rodPos = [2.0*chord, 0.0, 0.0]
     rodR = 0.1*chord
-    rodElemSize = 0.01*chord/gridPtsRichness
+    rodElemSize = 0.01*chord/(gridPts_alongNACA/75.0)
     rodBLwidth = 0.05*chord
 
     gridPts_alongRod = int(2*np.pi*rodR/rodElemSize/4)
-    gridPts_inRodBL = int(10*gridPtsRichness)
+    gridPts_inRodBL = int(10*gridPts_alongNACA/75.0)
     gridGeomProg_inRodBL = 1.1
 
     structTag = [pointTag, lineTag, surfaceTag]
@@ -102,7 +100,7 @@ x_min = - 1.5*chord
 x_max = 3*chord
 y_min = - 1.5*chord
 y_max = 1.5*chord
-elemSize_rect = chord/20/gridPtsRichness
+elemSize_rect = chord/20/(gridPts_alongNACA/75.0)
 
 x_minBUFF = - 1.75*chord
 x_maxBUFF = 7*chord
@@ -110,11 +108,11 @@ y_minBUFF = - 1.75*chord
 y_maxBUFF = 1.75*chord
 elemSize_rectBUFF = elemSize_rect
 
-x_minINF = - 10.0*chord
-x_maxINF = 20.0*chord
-y_minINF = - 10.0*chord
-y_maxINF = 10.0*chord
-elemSize_rectINF = 20*elemSize_rect
+x_minINF = - 20.0*chord
+x_maxINF = 30.0*chord
+y_minINF = - 20.0*chord
+y_maxINF = 20.0*chord
+elemSize_rectINF = np.min([50*elemSize_rect, int((y_maxINF-y_minINF)/5.0)])
 
 [rectLine, pointTag, lineTag] = gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec)
 [rectLineBUFF, pointTag, lineTag] = gmeshed_rectangle_contour(x_minBUFF, x_maxBUFF, y_minBUFF, y_maxBUFF, elemSize_rectBUFF, pointTag, lineTag, rotMat, shiftVec)
@@ -241,8 +239,8 @@ gmsh.model.addPhysicalGroup(pb_3Dim, [*ExtrudUnstructBUFF_vol, *ExtrudUnstructIN
 
 # export volume mesh only for visualisation:
 if CONF == 'rod':
-    gmsh.write("rod_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_mo"+str(elemOrder)+".vtk")
-    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_mo"+str(elemOrder)+".vtk")
+    gmsh.write("rod_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".vtk")
+    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".vtk")
 
 if not (CONF == 'airfoil'):
     gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_rodHardWall], 4, "Rod Hard Wall")
@@ -270,24 +268,24 @@ gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is sel
 
 # export mesh with all tags for computation:
 if CONF == 'rod':
-    gmsh.write("rod_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_mo"+str(elemOrder)+".msh")
+    gmsh.write("rod_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".msh")
 else:
-    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_mo"+str(elemOrder)+".msh")
+    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".msh")
 
 # export surfaces where the solution will be exported.
 gmsh.model.removePhysicalGroups()
 if not (CONF == 'airfoil'):
     gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_rodHardWall], 1, "Rod Hard Wall")
-    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_mo"+str(elemOrder)+"_rodSurf.msh")
+    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+"_rodSurf.msh")
 
 gmsh.model.removePhysicalGroups()
 if not (CONF == 'rod'):
     gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_airfoilHardWall], 1, "Airfoil Hard Wall")
-    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_mo"+str(elemOrder)+"_airfoilSurf.msh")
+    gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+"_airfoilSurf.msh")
 
 gmsh.model.removePhysicalGroups()
 gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 1, "Periodic plan")
-gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_gridRich"+str(gridPtsRichness)+"_mo"+str(elemOrder)+"_sideSurf.msh")
+gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+"_sideSurf.msh")
 
 # delete the "__pycache__" folder:
 try:
