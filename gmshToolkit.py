@@ -2721,7 +2721,7 @@ def returnAirfoilContour(lTS, bluntTrailingEdge):
     if bluntTrailingEdge:
         lAirfoilContour.extend([lTS[lEl], lTS[lEu]])
 
-    return lAirfoilContour
+    return lAirfoilContour, [*lTS[lairfoilUp]], [*lTS[lairfoilLow]]
 
 
 def returnStructGridOuterContour(lTS, bluntTrailingEdge):

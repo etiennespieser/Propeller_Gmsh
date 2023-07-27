@@ -9,12 +9,18 @@ import shutil
 
 NACA_type = '0012'
 
-bluntTrailingEdge = False
+bluntTrailingEdge = True
 
-gridPts_alongNACA = 25 # Other parameters scale with this one. If for small "gridPts_alongNACA", LE curvature fails, change "highOrderBLoptim".
+gridPts_alongNACA = 4 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
+                       # Other parameters scale with this one. 
 elemOrder = 3 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
-highOrderBLoptim = 3 # by default choose 4. (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
-
+highOrderBLoptim = 4 # 0: none,
+                     # 1: optimization, 
+                     # 2: elastic+optimization, 
+                     # 3: elastic, 
+                     # 4: fast curving
+                     # by default choose 4. If for small "gridPts_alongNACA", LE curvature fails, try other values.  
+                     
 gridPts_inBL = int(20*gridPts_alongNACA/75.0) # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.25
 
@@ -68,7 +74,7 @@ GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpat
 # [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
 [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil_HO(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
 
-airfoilLine = returnAirfoilContour(lineTag_list, bluntTrailingEdge)
+airfoilLine, airfoilLineSuction, airfoilLinePressure = returnAirfoilContour(lineTag_list, bluntTrailingEdge)
 structBLouterLine = returnStructGridOuterContour(lineTag_list, bluntTrailingEdge)
 structGridSurf = returnStructGridSide(surfaceTag_list, bluntTrailingEdge)
 
@@ -134,7 +140,7 @@ gmsh.model.geo.synchronize()
 gmsh.option.setNumber("Mesh.RecombineAll", 1)
 gmsh.option.setNumber("Mesh.ElementOrder", elemOrder) # gmsh.model.mesh.setOrder(elemOrder)
 gmsh.option.setNumber("Mesh.SecondOrderLinear", 0)
-gmsh.option.setNumber("Mesh.HighOrderOptimize", highOrderBLoptim) # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving)
+gmsh.option.setNumber("Mesh.HighOrderOptimize", highOrderBLoptim) # NB: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
 gmsh.option.setNumber("Mesh.NumSubEdges", elemOrder) # just visualisation ??
 
 gmsh.model.mesh.generate(2)
@@ -190,6 +196,39 @@ gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is sel
 gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".msh")
 gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".vtk")
 # paraview support for High-order meshes: https://www.kitware.com/high-order-using-gmsh-reader-plugin-in-paraview/
+
+
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+# # Calculate the first cell size # #
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+### Computation of the 1st cell height
+if (gridGeomProg_inBL==1):
+    height_firstCell_LE = height_LE/gridPts_inBL
+    height_firstCell_TE = height_TE/gridPts_inBL
+else:
+    #  h_{i+1} = h_i*gridGeomProg_inBL
+    #  H_tot = Sum(h_i)_{i=1..gridPts_inBL} = firstCell * (1-gridGeomProg_inBL^gridPts_inBL)/(1-gridGeomProg_inBL)
+    height_firstCell_LE = height_LE*(1-gridGeomProg_inBL)/(1-gridGeomProg_inBL**gridPts_inBL)
+    height_firstCell_TE = height_TE*(1-gridGeomProg_inBL)/(1-gridGeomProg_inBL**gridPts_inBL)
+print("Quality : 1st cell size @LE = "+ '{:.2e}'.format(height_firstCell_LE/chord)+" * chord")
+print("Quality : 1st cell size @TE = "+ '{:.2e}'.format(height_firstCell_TE/chord)+" * chord")
+
+### Computation of the NACA profile length (suction side)
+# arc length L of a function y=f(x) for x=a..b is L = int_{x=a..b} sqrt(1+ (df(x)/dx)^2) dx 
+# the coordinates are accessed through the api intsead: https://bthierry.pages.math.cnrs.fr/tutorial/gmsh/api/detail/
+suctionLine_PG_tag = 99
+gmsh.model.addPhysicalGroup(pb_1Dim, [*airfoilLineSuction], suctionLine_PG_tag, "airfoil suction line")
+line_airfoilUp_coord = gmsh.model.mesh.getNodesForPhysicalGroup(1, suctionLine_PG_tag)[1]
+line_airfoilUp_coord = line_airfoilUp_coord.reshape(elemOrder*(gridPts_alongNACA-1)+1,3)
+line_airfoilUp_coord = line_airfoilUp_coord[line_airfoilUp_coord[:,0].argsort()] # sorting by chordwise coordinates https://stackoverflow.com/questions/2828059/sorting-arrays-in-numpy-by-column
+suctionSideArcLength = 0
+for i in range(0, np.shape(line_airfoilUp_coord)[0]-1):
+    suctionSideArcLength = suctionSideArcLength + np.sqrt( (line_airfoilUp_coord[i+1,0]-line_airfoilUp_coord[i,0])**2 + (line_airfoilUp_coord[i+1,1]-line_airfoilUp_coord[i,1])**2)
+# from matplotlib import pyplot as plt
+# plt.plot(line_airfoilUp_coord[:,0],line_airfoilUp_coord[:,1],'-+')
+# plt.show()
+print("Quality : cell size along chord = "+ '{:.2e}'.format(suctionSideArcLength/((gridPts_alongNACA-1)*chord))+ " * chord")
 
 
 # delete the "__pycache__" folder:

@@ -14,12 +14,17 @@ CONF = 'airfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = False
 
-gridPts_alongNACA = 30 # Other parameters scale with this one. If for small "gridPts_alongNACA", LE curvature fails, change "highOrderBLoptim".
-elemOrder = 2 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
-highOrderBLoptim = 4 # by default choose 4. (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving). alternative: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
+gridPts_alongNACA = 30 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
+                       # Other parameters scale with this one. 
+elemOrder = 3 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
+highOrderBLoptim = 4 # 0: none,
+                     # 1: optimization, 
+                     # 2: elastic+optimization, 
+                     # 3: elastic, 
+                     # 4: fast curving
+                     # by default choose 4. If for small "gridPts_alongNACA", LE curvature fails, try other values.  
 
-
-gridPts_alongSpan = int(20*gridPts_alongNACA/75.0)
+gridPts_alongSpan = int(23*gridPts_alongNACA/75.0)
 
 gridPts_inBL = int(20*gridPts_alongNACA/75.0) # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.25
@@ -152,17 +157,17 @@ surf_unstructINF = surfaceTag
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 if not (CONF == 'airfoil'):
-    [ExtrudRodBL_vol, ExtrudRodBL_symFace, ExtrudRodBL_skin] = extrude_rodBL(sTL_rod, span, gridPts_alongSpan)
+    [ExtrudRodBL_vol, ExtrudRodBL_symFace, ExtrudRodBL_skin] = extrude_rodBL(sTL_rod, span, gridPts_alongSpan-1)
     surfMesh_rodHardWall = [*ExtrudRodBL_skin]
     
 if not (CONF == 'rod'):
     # [ExtrudAirfoildStruct_vol, ExtrudStructAirfoil_symFace, ExtrudStructAirfoil_skin] = extrude_airfoilStruct(sTL_airfoil, bluntTrailingEdge, gridPts_alongNACA, span, gridPts_alongSpan)
-    [ExtrudAirfoildStruct_vol, ExtrudStructAirfoil_symFace, ExtrudStructAirfoil_skin] = extrude_airfoilStruct_HO(sTL_airfoil, bluntTrailingEdge, gridPts_alongNACA, span, gridPts_alongSpan)
+    [ExtrudAirfoildStruct_vol, ExtrudStructAirfoil_symFace, ExtrudStructAirfoil_skin] = extrude_airfoilStruct_HO(sTL_airfoil, bluntTrailingEdge, gridPts_alongNACA, span, gridPts_alongSpan-1)
     surfMesh_airfoilHardWall = [*ExtrudStructAirfoil_skin]
 
-[ExtrudUnstructCFD_vol, ExtrudUnstructCFD_symFace] = extrude_unstructCFD(surf_unstructCFD, span, gridPts_alongSpan)
-[ExtrudUnstructBUFF_vol, ExtrudUnstructBUFF_symFace, ExtrudUnstructBUFF_innerSkin, ExtrudUnstructBUFF_outerSkin] = extrude_unstructBUFF(surf_unstructBUFF, span, gridPts_alongSpan)
-[ExtrudUnstructINF_vol, ExtrudUnstructINF_symFace, ExtrudUnstructINF_innerSkin, ExtrudUnstructINF_outerSkin] = extrude_unstructBUFF(surf_unstructINF, span, gridPts_alongSpan)
+[ExtrudUnstructCFD_vol, ExtrudUnstructCFD_symFace] = extrude_unstructCFD(surf_unstructCFD, span, gridPts_alongSpan-1)
+[ExtrudUnstructBUFF_vol, ExtrudUnstructBUFF_symFace, ExtrudUnstructBUFF_innerSkin, ExtrudUnstructBUFF_outerSkin] = extrude_unstructBUFF(surf_unstructBUFF, span, gridPts_alongSpan-1)
+[ExtrudUnstructINF_vol, ExtrudUnstructINF_symFace, ExtrudUnstructINF_innerSkin, ExtrudUnstructINF_outerSkin] = extrude_unstructBUFF(surf_unstructINF, span, gridPts_alongSpan-1)
 
 if CONF == 'rodAirfoil':
     volMesh = [*ExtrudRodBL_vol, *ExtrudAirfoildStruct_vol, *ExtrudUnstructCFD_vol]
@@ -204,7 +209,7 @@ gmsh.model.geo.synchronize()
 gmsh.option.setNumber("Mesh.RecombineAll", 1)
 gmsh.option.setNumber("Mesh.ElementOrder", elemOrder) # gmsh.model.mesh.setOrder(elemOrder)
 gmsh.option.setNumber("Mesh.SecondOrderLinear", 0)
-gmsh.option.setNumber("Mesh.HighOrderOptimize", highOrderBLoptim) # (0: none, 1: optimization, 2: elastic+optimization, 3: elastic, 4: fast curving)
+gmsh.option.setNumber("Mesh.HighOrderOptimize", highOrderBLoptim) # NB: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
 gmsh.option.setNumber("Mesh.NumSubEdges", elemOrder) # just visualisation ??
 
 
@@ -286,6 +291,44 @@ if not (CONF == 'rod'):
 gmsh.model.removePhysicalGroups()
 gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_original], 1, "Periodic plan")
 gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+"_sideSurf.msh")
+
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+# # Calculate the first cell size # #
+# $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+if not (CONF == 'rod'):
+    ### Computation of the 1st cell height
+    if (gridGeomProg_inBL==1):
+        height_firstCell_LE = height_LE/gridPts_inBL
+        height_firstCell_TE = height_TE/gridPts_inBL
+    else:
+        #  h_{i+1} = h_i*gridGeomProg_inBL
+        #  H_tot = Sum(h_i)_{i=1..gridPts_inBL} = firstCell * (1-gridGeomProg_inBL^gridPts_inBL)/(1-gridGeomProg_inBL)
+        height_firstCell_LE = height_LE*(1-gridGeomProg_inBL)/(1-gridGeomProg_inBL**gridPts_inBL)
+        height_firstCell_TE = height_TE*(1-gridGeomProg_inBL)/(1-gridGeomProg_inBL**gridPts_inBL)
+    print("Quality : 1st cell size @LE = "+ '{:.2e}'.format(height_firstCell_LE/chord)+" * chord")
+    print("Quality : 1st cell size @TE = "+ '{:.2e}'.format(height_firstCell_TE/chord)+" * chord")
+
+    ### Computation of the cell size on the skin of the NACA profile (suction side)
+    # arc length L of a function y=f(x) for x=a..b is L = int_{x=a..b} sqrt(1+ (df(x)/dx)^2) dx 
+    # the coordinates are accessed through the api intsead: https://bthierry.pages.math.cnrs.fr/tutorial/gmsh/api/detail/
+    airfoilLine, airfoilLineSuction, airfoilLinePressure = returnAirfoilContour(lTL_airfoil, bluntTrailingEdge)
+    suctionLine_PG_tag = 99
+    gmsh.model.addPhysicalGroup(pb_1Dim, [*airfoilLineSuction], suctionLine_PG_tag, "airfoil suction line")
+    line_airfoilUp_coord = gmsh.model.mesh.getNodesForPhysicalGroup(1, suctionLine_PG_tag)[1]
+    line_airfoilUp_coord = line_airfoilUp_coord.reshape(elemOrder*(gridPts_alongNACA-1)+1,3)
+    line_airfoilUp_coord = line_airfoilUp_coord[line_airfoilUp_coord[:,0].argsort()] # sorting by chordwise coordinates https://stackoverflow.com/questions/2828059/sorting-arrays-in-numpy-by-column
+    suctionSideArcLength = 0
+    for i in range(0, np.shape(line_airfoilUp_coord)[0]-1):
+        suctionSideArcLength = suctionSideArcLength + np.sqrt( (line_airfoilUp_coord[i+1,0]-line_airfoilUp_coord[i,0])**2 + (line_airfoilUp_coord[i+1,1]-line_airfoilUp_coord[i,1])**2)
+    # from matplotlib import pyplot as plt
+    # plt.plot(line_airfoilUp_coord[:,0],line_airfoilUp_coord[:,1],'-+')
+    # plt.show()
+    print("Quality : cell size along chord = "+ '{:.2e}'.format(suctionSideArcLength/((gridPts_alongNACA-1)*chord))+ " * chord")
+
+    ### Computation of the cell size spanwise
+    print("Quality : cell size along span = "+ '{:.2e}'.format(span/((gridPts_alongSpan-1)*chord))+ " * chord")
+
 
 # delete the "__pycache__" folder:
 try:
