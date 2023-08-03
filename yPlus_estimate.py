@@ -15,6 +15,7 @@ import grimoireOfPlots as gop
 Re = 5*10**4
 u_ext = 3.75 # m/s
 kin_vis = 0.000015 # m**2/s
+y_1stCell = 2.52*0.2*0.001
 target_yPlus = 1.0
 
 plotCfModels = False
@@ -78,9 +79,11 @@ Cf_range = Cf_Wieghard
 
 Cf = np.interp(Re, Re_range, Cf_range)
 frictionVelo = np.sqrt(Cf*u_ext**2/2)
-y = target_yPlus*kin_vis/frictionVelo
+y_optimal = target_yPlus*kin_vis/frictionVelo
+yPlus_1stCell = y_1stCell*frictionVelo/kin_vis
 
-print("for a target y+ of "+str(target_yPlus)+", the first cell height must be "'{:.2e}'.format(y)+" m.")
+print("The dimensional thickness y+ at the wall measures "+'{:.2e}'.format(yPlus_1stCell)+",")
+print("for a target y+ of "+str(target_yPlus)+", the first cell height must be "'{:.2e}'.format(y_optimal)+" m.")
 
 
 
