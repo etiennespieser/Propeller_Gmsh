@@ -9,7 +9,6 @@
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-# sys.path.append('/home/espieser/Documents/03_MFEM/00_workspace/WaveMap59')
 sys.path.append('../WaveMap59/')
 import grimoireOfPlots as gop
 
