@@ -3373,7 +3373,6 @@ def extrude_airfoilStruct_HO(sTL_airfoil, bluntTrailingEdge, gridPts_alongNACA, 
     ExtrudAirfoildStruct_vol = []
     for i in range(len(ExtrudAirfoildStruct)):
         if ExtrudAirfoildStruct[i][0] == 3:  
-            print("***** tag"+str(i))
             ExtrudAirfoildStruct_vol.append(ExtrudAirfoildStruct[i][1])
 
     # Extract surface tags of struct Airfoil
