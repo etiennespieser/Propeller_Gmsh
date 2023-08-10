@@ -14,9 +14,9 @@ CONF = 'airfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = False
 
-gridPts_alongNACA = 30 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
+gridPts_alongNACA = 100 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
                        # Other parameters scale with this one. 
-elemOrder = 3 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
+elemOrder = 5 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
 highOrderBLoptim = 4 # 0: none,
                      # 1: optimization, 
                      # 2: elastic+optimization, 
@@ -24,10 +24,10 @@ highOrderBLoptim = 4 # 0: none,
                      # 4: fast curving
                      # by default choose 4. If for small "gridPts_alongNACA", LE curvature fails, try other values.  
 
-gridPts_alongSpan = int(23*gridPts_alongNACA/75.0)
+gridPts_alongSpan = int(20*gridPts_alongNACA/75.0)
 
-gridPts_inBL = int(20*gridPts_alongNACA/75.0) # > 2 for split into fully hex mesh
-gridGeomProg_inBL = 1.25
+gridPts_inBL = int(15*gridPts_alongNACA/75.0) # > 2 for split into fully hex mesh
+gridGeomProg_inBL = 1.15
 
 TEpatchGridFlaringAngle = 30 # deg
 gridPts_alongTEpatch = int(13*gridPts_alongNACA/75.0) # > 2 for split into fully hex mesh
