@@ -11,7 +11,7 @@ NACA_type = '0012'
 
 bluntTrailingEdge = True
 
-gridPts_alongNACA = 4 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
+gridPts_alongNACA = 50 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
                        # Other parameters scale with this one. 
 elemOrder = 3 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
 highOrderBLoptim = 4 # 0: none,
@@ -197,6 +197,9 @@ gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems_"+str(int(pi
 gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".vtk")
 # paraview support for High-order meshes: https://www.kitware.com/high-order-using-gmsh-reader-plugin-in-paraview/
 
+gmsh.model.removePhysicalGroups()
+gmsh.model.addPhysicalGroup(pb_1Dim, [*airfoilLine], 1, "Airfoil Hard Wall")
+gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+"_airfoilSurf.msh")
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Calculate the first cell size # #
