@@ -3206,6 +3206,336 @@ def gmeshed_cylinder_surf(y_min_cyl, y_max_cyl, r_cyl, elemSize_cyl, pointTag, l
 # ******************************************************************************************************************************************************************************
 # ******************************************************************************************************************************************************************************
 
+def gmeshed_sphereTri_surf(x_center, y_center, z_center, radius, elemSize, pointTag, lineTag, surfaceTag):
+
+    # http://web4.cs.ucl.ac.uk/research/vis/toast/demo_meshgen1/demo_meshgen1.html
+    # https://github.com/toastpp/toastpp/blob/master/examples/matlab/gmsh/sphere.geo
+
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$
+    # # creation of the Points # #
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+    gmsh.model.geo.addPoint(x_center, y_center, z_center, elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_center = pointTag
+
+    gmsh.model.geo.addPoint(x_center+radius, y_center, z_center, elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_right = pointTag
+    gmsh.model.geo.addPoint(x_center-radius, y_center, z_center, elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_left = pointTag
+
+    gmsh.model.geo.addPoint(x_center, y_center+radius, z_center, elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_top = pointTag
+    gmsh.model.geo.addPoint(x_center, y_center-radius, z_center, elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_bottom = pointTag
+
+    gmsh.model.geo.addPoint(x_center, y_center, z_center+radius, elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_front = pointTag
+    gmsh.model.geo.addPoint(x_center, y_center, z_center-radius, elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_back = pointTag
+
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$
+    # # creation of the Lines # #
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+    gmsh.model.geo.addCircleArc(point_back, point_center, point_right, lineTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_backRight = lineTag
+    gmsh.model.geo.addCircleArc(point_right, point_center, point_front, lineTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_frontRight = lineTag
+    gmsh.model.geo.addCircleArc(point_front, point_center, point_left, lineTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_frontLeft = lineTag
+    gmsh.model.geo.addCircleArc(point_left, point_center, point_back, lineTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_backLeft = lineTag
+
+    gmsh.model.geo.addCircleArc(point_top, point_center, point_right, lineTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_topRight = lineTag
+    gmsh.model.geo.addCircleArc(point_right, point_center, point_bottom, lineTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_bottomRight = lineTag
+    gmsh.model.geo.addCircleArc(point_bottom, point_center, point_left, lineTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_bottomLeft = lineTag
+    gmsh.model.geo.addCircleArc(point_left, point_center, point_top, lineTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_topLeft = lineTag
+
+    gmsh.model.geo.addCircleArc(point_back, point_center, point_top, lineTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_backTop = lineTag
+    gmsh.model.geo.addCircleArc(point_top, point_center, point_front, lineTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_frontTop = lineTag
+    gmsh.model.geo.addCircleArc(point_front, point_center, point_bottom, lineTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_frontBottom = lineTag
+    gmsh.model.geo.addCircleArc(point_bottom, point_center, point_back, lineTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_backBottom = lineTag
+
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+    # # creation of the Surfaces # #
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+    gmsh.model.geo.add_curve_loop([-line_backRight, line_topRight, line_backTop], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_backTopRight = surfaceTag
+
+    gmsh.model.geo.add_curve_loop([-line_backLeft, line_topLeft, -line_backTop], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_backTopLeft = surfaceTag
+
+    gmsh.model.geo.add_curve_loop([line_backRight, line_bottomRight, line_backBottom], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_backBottomRight = surfaceTag
+
+    gmsh.model.geo.add_curve_loop([line_backLeft, line_bottomLeft, -line_backBottom], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_backBottomLeft = surfaceTag
+
+    gmsh.model.geo.add_curve_loop([-line_frontRight, -line_topRight, line_frontTop], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_frontTopRight = surfaceTag
+
+    gmsh.model.geo.add_curve_loop([-line_frontLeft, -line_topLeft, -line_frontTop], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_frontTopLeft = surfaceTag
+
+    gmsh.model.geo.add_curve_loop([line_frontRight, -line_bottomRight, line_frontBottom], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_frontBottomRight = surfaceTag
+
+    gmsh.model.geo.add_curve_loop([line_frontLeft, -line_bottomLeft, -line_frontBottom], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    # gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_frontBottomLeft = surfaceTag
+
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+    # # remaping of the sphere surface # #    !! ONLY WORKS FOR MESH WITH ORDER 1 ELEMENTS !!
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+    # gmsh.model.geo.synchronize()
+
+    # gmsh.model.geo.removeAllDuplicates() # equivalent to "coherence" function in .geo syntaxe. https://gitlab.onelab.info/gmsh/gmsh/-/issues/983 
+
+    # gmsh.model.mesh.setCompound(pb_2Dim, [surf_backTopRight, surf_backTopLeft, surf_backBottomLeft, surf_backBottomRight])
+    # surfaceTag = surfaceTag+1 
+    # surf_backHalfSphere = surfaceTag
+
+    # gmsh.model.mesh.setCompound(pb_2Dim, [surf_frontBottomRight, surf_frontBottomLeft, surf_frontTopLeft, surf_frontTopRight])
+    # surfaceTag = surfaceTag+1 
+    # surf_frontHalfSphere = surfaceTag
+
+    return [surf_backTopRight, surf_backTopLeft, surf_backBottomLeft, surf_backBottomRight, surf_frontBottomRight, surf_frontBottomLeft, surf_frontTopLeft, surf_frontTopRight], pointTag, lineTag, surfaceTag
+
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+
+def cube2Sphere_projection(unitCubLoc):
+    # following https://catlikecoding.com/unity/tutorials/cube-sphere/
+    # coordinates are expressed for a cube of edge length of 2 with x,y,z in [-1.0, 1.0]
+    x_cube = unitCubLoc[0]
+    y_cube = unitCubLoc[1]
+    z_cube = unitCubLoc[2]
+    x_sphere = x_cube*np.sqrt(1.0 - y_cube**2/2 - z_cube**2/2 + y_cube**2*z_cube**2/3)
+    y_sphere = y_cube*np.sqrt(1.0 - x_cube**2/2 - z_cube**2/2 + x_cube**2*z_cube**2/3)
+    z_sphere = z_cube*np.sqrt(1.0 - x_cube**2/2 - y_cube**2/2 + x_cube**2*y_cube**2/3)
+    return [x_sphere, y_sphere, z_sphere]
+
+def gmeshed_sphereQuad_surf(x_center, y_center, z_center, radius, elemSize, pointTag, lineTag, surfaceTag):
+
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$
+    # # creation of the Points # #
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+    gmsh.model.geo.addPoint(x_center, y_center, z_center, elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_center = pointTag
+
+    unitCubLoc = cube2Sphere_projection([1.0, 1.0, -1.0])
+    gmsh.model.geo.addPoint(x_center+radius*unitCubLoc[0], y_center+radius*unitCubLoc[1], z_center+radius*unitCubLoc[2], elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_backTopRight = pointTag
+    unitCubLoc = cube2Sphere_projection([1.0, 1.0, 1.0])
+    gmsh.model.geo.addPoint(x_center+radius*unitCubLoc[0], y_center+radius*unitCubLoc[1], z_center+radius*unitCubLoc[2], elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_frontTopRight = pointTag
+    unitCubLoc = cube2Sphere_projection([-1.0, 1.0, 1.0])
+    gmsh.model.geo.addPoint(x_center+radius*unitCubLoc[0], y_center+radius*unitCubLoc[1], z_center+radius*unitCubLoc[2], elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_frontTopLeft = pointTag
+    unitCubLoc = cube2Sphere_projection([-1.0, 1.0, -1.0])
+    gmsh.model.geo.addPoint(x_center+radius*unitCubLoc[0], y_center+radius*unitCubLoc[1], z_center+radius*unitCubLoc[2], elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_backTopLeft = pointTag
+
+    unitCubLoc = cube2Sphere_projection([1.0, -1.0, -1.0])
+    gmsh.model.geo.addPoint(x_center+radius*unitCubLoc[0], y_center+radius*unitCubLoc[1], z_center+radius*unitCubLoc[2], elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_backBottomRight = pointTag
+    unitCubLoc = cube2Sphere_projection([1.0, -1.0, 1.0])
+    gmsh.model.geo.addPoint(x_center+radius*unitCubLoc[0], y_center+radius*unitCubLoc[1], z_center+radius*unitCubLoc[2], elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_frontBottomRight = pointTag
+    unitCubLoc = cube2Sphere_projection([-1.0, -1.0, 1.0])
+    gmsh.model.geo.addPoint(x_center+radius*unitCubLoc[0], y_center+radius*unitCubLoc[1], z_center+radius*unitCubLoc[2], elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_frontBottomLeft = pointTag
+    unitCubLoc = cube2Sphere_projection([-1.0, -1.0, -1.0])
+    gmsh.model.geo.addPoint(x_center+radius*unitCubLoc[0], y_center+radius*unitCubLoc[1], z_center+radius*unitCubLoc[2], elemSize, pointTag+1)
+    pointTag = pointTag+1 # store the last 'pointTag' from previous loop
+    point_backBottomLeft = pointTag
+
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$
+    # # creation of the Lines # #
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+    gmsh.model.geo.addCircleArc(point_backTopRight, point_center, point_frontTopRight, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_topRight = lineTag
+    gmsh.model.geo.addCircleArc(point_frontTopRight, point_center, point_frontTopLeft, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_frontTop = lineTag
+    gmsh.model.geo.addCircleArc(point_frontTopLeft, point_center, point_backTopLeft, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_topLeft = lineTag
+    gmsh.model.geo.addCircleArc(point_backTopLeft, point_center, point_backTopRight, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_backTop = lineTag
+
+    gmsh.model.geo.addCircleArc(point_backBottomRight, point_center, point_frontBottomRight, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_bottomRight = lineTag
+    gmsh.model.geo.addCircleArc(point_frontBottomRight, point_center, point_frontBottomLeft, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_frontBottom = lineTag
+    gmsh.model.geo.addCircleArc(point_frontBottomLeft, point_center, point_backBottomLeft, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_bottomLeft = lineTag
+    gmsh.model.geo.addCircleArc(point_backBottomLeft, point_center, point_backBottomRight, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_backBottom = lineTag
+
+
+    gmsh.model.geo.addCircleArc(point_backBottomRight, point_center, point_backTopRight, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_backRight = lineTag
+    gmsh.model.geo.addCircleArc(point_frontBottomRight, point_center, point_frontTopRight, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_frontRight = lineTag
+    gmsh.model.geo.addCircleArc(point_frontBottomLeft, point_center, point_frontTopLeft, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_frontLeft = lineTag
+    gmsh.model.geo.addCircleArc(point_backBottomLeft, point_center, point_backTopLeft, lineTag+1)
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    lineTag = lineTag+1 # store the last 'lineTag' from previous loop
+    line_backLeft = lineTag
+
+
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+    # # creation of the Surfaces # #
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+    gmsh.model.geo.add_curve_loop([-line_topRight, -line_frontTop, -line_topLeft, -line_backTop], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_top = surfaceTag
+    gmsh.model.geo.add_curve_loop([line_backTop, -line_backRight, -line_backBottom, line_backLeft], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_back = surfaceTag
+    gmsh.model.geo.add_curve_loop([line_topRight, line_backRight, -line_bottomRight, -line_frontRight], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_right = surfaceTag
+    gmsh.model.geo.add_curve_loop([line_frontRight, line_frontTop, -line_frontLeft, -line_frontBottom], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_front = surfaceTag
+    gmsh.model.geo.add_curve_loop([line_frontLeft, -line_bottomLeft, -line_backLeft, line_topLeft], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_left = surfaceTag
+    gmsh.model.geo.add_curve_loop([line_bottomLeft, line_backBottom, line_bottomRight, line_frontBottom], surfaceTag+1)
+    gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
+    gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
+    gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
+    surfaceTag = surfaceTag+1 
+    surf_bottom = surfaceTag
+
+    return [surf_top, surf_back, surf_right, surf_front, surf_left, surf_bottom], pointTag, lineTag, surfaceTag
+
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+# ******************************************************************************************************************************************************************************
+
 def gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec):
 
     shiftVec = np.array(shiftVec)

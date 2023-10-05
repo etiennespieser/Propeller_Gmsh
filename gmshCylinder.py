@@ -19,7 +19,6 @@ highOrderBLoptim = 4 # 0: none,
                      # 3: elastic, 
                      # 4: fast curving
                      # by default choose 4. If for small "gridPts_alongNACA", LE curvature fails, try other values. 
-
 gmsh.initialize()
 
 pointTag = 0
@@ -27,7 +26,7 @@ lineTag = 0
 surfaceTag = 0
 volumeTag = 0
 
-[ cylSurf1, pointTag, lineTag, surfaceTag] = gmeshed_cylinder_surf(y_min, y_max, r_cyl, elemSize, pointTag, lineTag, surfaceTag)
+[cylSurf, pointTag, lineTag, surfaceTag] = gmeshed_cylinder_surf(y_min, y_max, r_cyl, elemSize, pointTag, lineTag, surfaceTag)
 
 gmsh.model.geo.synchronize()
 
@@ -43,8 +42,7 @@ gmsh.model.mesh.generate(2)
 gmsh.model.geo.synchronize()
 [nodePerEntity, elemPerEntity] = countDOF()
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*cylSurf1], 1, "Cylinder Grid")
-
+gmsh.model.addPhysicalGroup(pb_2Dim, [*cylSurf], 1, "Cylindrical Grid")
 
 # Write mesh data:
 gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is selected "Mesh.SaveAll=1" discards the group definitions (to be avoided!).
