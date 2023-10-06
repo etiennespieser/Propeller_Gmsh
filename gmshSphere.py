@@ -11,9 +11,9 @@ x_center = 0.0
 y_center = 0.0
 z_center = 0.0
 radius = 1.0
-elemSize = 0.5
+elemSize = 0.2
 
-elemOrder = 3 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
+elemOrder = 8 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
 highOrderBLoptim = 4 # 0: none,
                      # 1: optimization, 
                      # 2: elastic+optimization, 
@@ -30,8 +30,8 @@ volumeTag = 0
 
 pb_2Dim = 2
 
-[sphereSurfTri, pointTag, lineTag, surfaceTag] = gmeshed_sphereTri_surf(x_center-1.5*radius, y_center, z_center, radius, elemSize, pointTag, lineTag, surfaceTag)
-[sphereSurfQuad, pointTag, lineTag, surfaceTag] = gmeshed_sphereQuad_surf(x_center+1.5*radius, y_center, z_center, radius, elemSize, pointTag, lineTag, surfaceTag)
+# [sphereSurfTri, pointTag, lineTag, surfaceTag] = gmeshed_sphereTri_surf(x_center-3*radius, y_center, z_center, radius, elemSize, pointTag, lineTag, surfaceTag)
+[sphereSurfQuad, pointTag, lineTag, surfaceTag] = gmeshed_sphereQuad_surf(x_center, y_center, z_center, radius, elemSize, pointTag, lineTag, surfaceTag)
 
 
 gmsh.model.geo.synchronize()
@@ -48,15 +48,15 @@ gmsh.model.mesh.generate(2)
 gmsh.model.geo.synchronize()
 [nodePerEntity, elemPerEntity] = countDOF()
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*sphereSurfTri], 1, "Spherical Grid Tri")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*sphereSurfQuad], 1, "Spherical Grid Quad")
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*sphereSurfQuad], 2, "Spherical Grid Quad")
+# gmsh.model.addPhysicalGroup(pb_2Dim, [*sphereSurfTri], 2, "Spherical Grid Tri")
 
 # Write mesh data:
 gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is selected "Mesh.SaveAll=1" discards the group definitions (to be avoided!).
 
 # export mesh with all tags for computation:
-gmsh.write("Spheres_"+str(sum(elemPerEntity))+"elems.msh")
+gmsh.write("sphere_"+str(sum(elemPerEntity))+"elems_o"+str(elemOrder)+".msh")
 
 # delete the "__pycache__" folder:
 try:
