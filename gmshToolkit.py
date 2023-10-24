@@ -3245,53 +3245,53 @@ def gmeshed_sphereTri_surf(x_center, y_center, z_center, radius, elemSize, point
     # $$$$$$$$$$$$$$$$$$$$$$$$$$$
 
     gmsh.model.geo.addCircleArc(point_back, point_center, point_right, lineTag+1)
-    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_backRight = lineTag
     gmsh.model.geo.addCircleArc(point_right, point_center, point_front, lineTag+1)
-    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_frontRight = lineTag
     gmsh.model.geo.addCircleArc(point_front, point_center, point_left, lineTag+1)
-    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_frontLeft = lineTag
     gmsh.model.geo.addCircleArc(point_left, point_center, point_back, lineTag+1)
-    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_backLeft = lineTag
 
     gmsh.model.geo.addCircleArc(point_top, point_center, point_right, lineTag+1)
-    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_topRight = lineTag
     gmsh.model.geo.addCircleArc(point_right, point_center, point_bottom, lineTag+1)
-    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_bottomRight = lineTag
     gmsh.model.geo.addCircleArc(point_bottom, point_center, point_left, lineTag+1)
-    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_bottomLeft = lineTag
     gmsh.model.geo.addCircleArc(point_left, point_center, point_top, lineTag+1)
-    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_topLeft = lineTag
 
     gmsh.model.geo.addCircleArc(point_back, point_center, point_top, lineTag+1)
-    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_backTop = lineTag
     gmsh.model.geo.addCircleArc(point_top, point_center, point_front, lineTag+1)
-    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_frontTop = lineTag
     gmsh.model.geo.addCircleArc(point_front, point_center, point_bottom, lineTag+1)
-    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_frontBottom = lineTag
     gmsh.model.geo.addCircleArc(point_bottom, point_center, point_back, lineTag+1)
-    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    # gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_backBottom = lineTag
 
@@ -3437,54 +3437,54 @@ def gmeshed_sphereQuad_surf(x_center, y_center, z_center, radius, elemSize, poin
     # $$$$$$$$$$$$$$$$$$$$$$$$$$$
 
     gmsh.model.geo.addCircleArc(point_backTopRight, point_center, point_frontTopRight, lineTag+1)
-    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_topRight = lineTag
     gmsh.model.geo.addCircleArc(point_frontTopRight, point_center, point_frontTopLeft, lineTag+1)
-    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_frontTop = lineTag
     gmsh.model.geo.addCircleArc(point_frontTopLeft, point_center, point_backTopLeft, lineTag+1)
-    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_topLeft = lineTag
     gmsh.model.geo.addCircleArc(point_backTopLeft, point_center, point_backTopRight, lineTag+1)
-    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_backTop = lineTag
 
     gmsh.model.geo.addCircleArc(point_backBottomRight, point_center, point_frontBottomRight, lineTag+1)
-    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_bottomRight = lineTag
     gmsh.model.geo.addCircleArc(point_frontBottomRight, point_center, point_frontBottomLeft, lineTag+1)
-    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_frontBottom = lineTag
     gmsh.model.geo.addCircleArc(point_frontBottomLeft, point_center, point_backBottomLeft, lineTag+1)
-    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_bottomLeft = lineTag
     gmsh.model.geo.addCircleArc(point_backBottomLeft, point_center, point_backBottomRight, lineTag+1)
-    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_backBottom = lineTag
 
 
     gmsh.model.geo.addCircleArc(point_backBottomRight, point_center, point_backTopRight, lineTag+1)
-    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_backRight = lineTag
     gmsh.model.geo.addCircleArc(point_frontBottomRight, point_center, point_frontTopRight, lineTag+1)
-    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_frontRight = lineTag
     gmsh.model.geo.addCircleArc(point_frontBottomLeft, point_center, point_frontTopLeft, lineTag+1)
-    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_frontLeft = lineTag
     gmsh.model.geo.addCircleArc(point_backBottomLeft, point_center, point_backTopLeft, lineTag+1)
-    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int(np.round((np.pi*radius/2)/elemSize)+1))
+    gmsh.model.geo.mesh.setTransfiniteCurve(lineTag+1, np.int64(np.round((np.pi*radius/2)/elemSize)+1))
     lineTag = lineTag+1 # store the last 'lineTag' from previous loop
     line_backLeft = lineTag
 
