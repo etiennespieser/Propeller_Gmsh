@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Étienne Spieser (Tiānài), member of AANTC (https://aantc.ust.hk/)
+# Copyright (c) 2022-2023 Étienne Spieser (Tiānài), member of AANTC (https://aantc.ust.hk/)
 # available under MIT licence at: https://github.com/etiennespieser  
 # ------------------------------------------------------------------------------------
 
@@ -245,6 +245,7 @@ gmsh.model.addPhysicalGroup(pb_3Dim, [*ExtrudUnstructBUFF_vol, *ExtrudUnstructIN
 # export volume mesh only for visualisation:
 if CONF == 'rod':
     gmsh.write("rod_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".vtk")
+else:
     gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".vtk")
 
 if not (CONF == 'airfoil'):
