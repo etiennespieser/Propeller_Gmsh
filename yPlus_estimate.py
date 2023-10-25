@@ -15,7 +15,7 @@ import grimoireOfPlots as gop
 Re = 5*10**4
 u_ext = 3.75 # m/s
 kin_vis = 0.000015 # m**2/s
-y_1stCell = 2.52*0.2*0.001
+y_1stCell = 4.88e-4*0.2
 target_yPlus = 1.0
 
 plotCfModels = False

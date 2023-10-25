@@ -1,7 +1,6 @@
 # Copyright (c) 2022-2023 Étienne Spieser (Tiānài), member of AANTC (https://aantc.ust.hk/)
 # available under MIT licence at: https://github.com/etiennespieser  
 # ------------------------------------------------------------------------------------
-
 # aims at reproducing the rod-airfoil benchmark, Casalino, Jacob and Roger aiaaj03 DOI: 10.2514/2.1959
 
 import sys
@@ -14,9 +13,9 @@ CONF = 'airfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = False
 
-gridPts_alongNACA = 100 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
+gridPts_alongNACA = 50 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
                        # Other parameters scale with this one. 
-elemOrder = 5 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
+elemOrder = 3 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
 highOrderBLoptim = 4 # 0: none,
                      # 1: optimization, 
                      # 2: elastic+optimization, 
@@ -238,6 +237,7 @@ gmsh.model.mesh.generate()
 # Create the relevant Gmsh data structures from Gmsh model.
 gmsh.model.geo.synchronize()
 [nodePerEntity, elemPerEntity] = countDOF()
+# gmsh.model.setColor([(2, 3)], 255, 0, 0)  # Red
 
 gmsh.model.addPhysicalGroup(pb_3Dim, [*volMesh], 1, "CFD Grid")
 gmsh.model.addPhysicalGroup(pb_3Dim, [*ExtrudUnstructBUFF_vol, *ExtrudUnstructINF_vol], 2, "BUFF Grid")
@@ -278,7 +278,7 @@ if CONF == 'rod':
 else:
     gmsh.write(CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".msh")
 
-# export surfaces where the solution will be exported.
+# export surfaces where the solution will be later interpolated.
 gmsh.model.removePhysicalGroups()
 if not (CONF == 'airfoil'):
     gmsh.model.addPhysicalGroup(pb_2Dim, [*surfMesh_rodHardWall], 1, "Rod Hard Wall")

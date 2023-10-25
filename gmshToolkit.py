@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Étienne Spieser (Tiānài), member of AANTC (https://aantc.ust.hk/)
+# Copyright (c) 2022-2023 Étienne Spieser (Tiānài), member of AANTC (https://aantc.ust.hk/)
 # available under MIT licence at: https://github.com/etiennespieser  
 # ------------------------------------------------------------------------------------
 
@@ -1364,34 +1364,33 @@ def gmeshed_disk(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec):
     # # creation of the Surfaces # #
     # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-    gmsh.model.geo.add_curve_loop([-line_rodConnect1, line_rodArc1, line_rodConnect2, -line_rodBLarc1], surfaceTag+1)
+    gmsh.model.geo.add_curve_loop([line_rodConnect1, -line_rodArc1, -line_rodConnect2, line_rodBLarc1], surfaceTag+1)
     gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
     gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
     gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
     surfaceTag = surfaceTag+1 
     surf_rodStruct1 = surfaceTag
 
-    gmsh.model.geo.add_curve_loop([-line_rodConnect2, line_rodArc2, line_rodConnect3, -line_rodBLarc2], surfaceTag+1)
+    gmsh.model.geo.add_curve_loop([line_rodConnect2, -line_rodArc2, -line_rodConnect3, line_rodBLarc2], surfaceTag+1)
     gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
     gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
     gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
     surfaceTag = surfaceTag+1 
     surf_rodStruct2 = surfaceTag
 
-    gmsh.model.geo.add_curve_loop([-line_rodConnect3, line_rodArc3, line_rodConnect4, -line_rodBLarc3], surfaceTag+1)
+    gmsh.model.geo.add_curve_loop([line_rodConnect3, -line_rodArc3, -line_rodConnect4, line_rodBLarc3], surfaceTag+1)
     gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
     gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
     gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
     surfaceTag = surfaceTag+1 
     surf_rodStruct3 = surfaceTag
 
-    gmsh.model.geo.add_curve_loop([-line_rodConnect4, line_rodArc4, line_rodConnect1, -line_rodBLarc4], surfaceTag+1)
+    gmsh.model.geo.add_curve_loop([line_rodConnect4, -line_rodArc4, -line_rodConnect1, line_rodBLarc4], surfaceTag+1)
     gmsh.model.geo.addSurfaceFilling([surfaceTag+1], surfaceTag+1)
     gmsh.model.geo.mesh.setTransfiniteSurface(surfaceTag+1)
     gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
     surfaceTag = surfaceTag+1 
     surf_rodStruct4 = surfaceTag
-
 
     pRod = [point_rodPt1, point_rodPt2, point_rodPt3, point_rodPt4]
     pRodBL = [point_rodBLpt1, point_rodBLpt2, point_rodBLpt3, point_rodBLpt4]

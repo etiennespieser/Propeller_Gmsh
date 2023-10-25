@@ -1,6 +1,7 @@
-# Copyright (c) 2022 Étienne Spieser (Tiānài), member of AANTC (https://aantc.ust.hk/)
+# Copyright (c) 2022-2023 Étienne Spieser (Tiānài), member of AANTC (https://aantc.ust.hk/)
 # available under MIT licence at: https://github.com/etiennespieser  
 # ------------------------------------------------------------------------------------
+# aims at reproducing the rod-airfoil benchmark, Casalino, Jacob and Roger aiaaj03 DOI: 10.2514/2.1959
 
 import sys
 import gmsh
@@ -8,6 +9,7 @@ from gmshToolkit import *
 import shutil 
 
 NACA_type = '0012'
+CONF = 'rod' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = True
 
@@ -21,8 +23,8 @@ highOrderBLoptim = 4 # 0: none,
                      # 4: fast curving
                      # by default choose 4. If for small "gridPts_alongNACA", LE curvature fails, try other values.  
                      
-gridPts_inBL = int(20*gridPts_alongNACA/75.0) # > 2 for split into fully hex mesh
-gridGeomProg_inBL = 1.25
+gridPts_inBL = int(15*gridPts_alongNACA/75.0) # > 2 for split into fully hex mesh
+gridGeomProg_inBL = 1.15
 
 TEpatchGridFlaringAngle = 30 # deg
 gridPts_alongTEpatch = int(13*gridPts_alongNACA/75.0) # > 2 for split into fully hex mesh
@@ -38,45 +40,59 @@ chord = 0.2 # m
 # Initialize gmsh:
 gmsh.initialize()
 
-pTS1 = [] # pointTag_struct -- blade 1
-lTS1 = [] # lineTag_struct -- blade 1
-sTS1 = [] # surfaceTag_struct -- blade 1
-
-pTS2 = [] # pointTag_struct -- blade 2
-lTS2 = [] # lineTag_struct -- blade 2
-sTS2 = [] # surfaceTag_struct -- blade 2
-
 pointTag = 0
 lineTag = 0
 surfaceTag = 0
 volumeTag = 0
 
+rotMat = rotationMatrix([0.0, 0.0, 0.0]) # angles in degree
+shiftVec = [0.0, 0.0, 0.0] # shift of the airfoil origin
+
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Creation of the airfoil mesh # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-airfoilReferenceAlongChord = 0.5*chord
-TEpatchLength = 0.1*chord*np.cos(pitch*np.pi/180) # length of the TEpatch in along the x-axis
-wakeLength = 0.5*chord*np.cos(pitch*np.pi/180) # length of the wake in along the x-axis
-height_LE = 0.05*chord # Structured Grid offset layer gap at the leading edge
-height_TE = 0.1*chord # Structured Grid offset layer gap at the trailing edge
-gridPts_inTE = int(gridPts_inBL/7) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
+if not (CONF == 'rod'):
 
-airfoilReferenceAlongChord = 0.5*chord
-airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
+    airfoilReferenceAlongChord = 0.5*chord
+    TEpatchLength = 0.1*chord*np.cos(pitch*np.pi/180) # length of the TEpatch in along the x-axis
+    wakeLength = 0.5*chord*np.cos(pitch*np.pi/180) # length of the wake in along the x-axis
+    height_LE = 0.05*chord # Structured Grid offset layer gap at the leading edge
+    height_TE = 0.1*chord # Structured Grid offset layer gap at the trailing edge
+    gridPts_inTE = int(gridPts_inBL/7) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
 
-rotMat = rotationMatrix([0.0, 0.0, 0.0]) # angles in degree
-shiftVec = [0.0, 0.0, 0.0] # shift of the airfoil origin
+    airfoilReferenceAlongChord = 0.5*chord
+    airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
 
-structTag = [pointTag, lineTag, surfaceTag]
-GeomSpec = [NACA_type, bluntTrailingEdge, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
-GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
-# [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
-[pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil_HO(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
+    structTag = [pointTag, lineTag, surfaceTag]
+    GeomSpec = [NACA_type, bluntTrailingEdge, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
+    GridPtsSpec = [gridPts_alongNACA, gridPts_inBL, gridPts_inTE, gridPts_alongTEpatch, gridPts_alongWake, gridGeomProg_inBL, gridGeomProg_alongTEpatch, gridGeomProg_alongWake]
+    # [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
+    [pointTag_list, lineTag_list, surfaceTag_list, pointTag, lineTag, surfaceTag] = gmeshed_airfoil_HO(structTag, GeomSpec, GridPtsSpec, rotMat, shiftVec)
 
-airfoilLine, airfoilLineSuction, airfoilLinePressure = returnAirfoilContour(lineTag_list, bluntTrailingEdge)
-structBLouterLine = returnStructGridOuterContour(lineTag_list, bluntTrailingEdge)
-structGridSurf = returnStructGridSide(surfaceTag_list, bluntTrailingEdge)
+    airfoilLine, airfoilLineSuction, airfoilLinePressure = returnAirfoilContour(lineTag_list, bluntTrailingEdge)
+    bladeLine = returnStructGridOuterContour(lineTag_list, bluntTrailingEdge)
+    structGridSurf = returnStructGridSide(surfaceTag_list, bluntTrailingEdge)
+
+# $$$$$$$$$$$$$$$$$$$$$
+# # Creation of rod # #
+# $$$$$$$$$$$$$$$$$$$$$
+
+if not (CONF == 'airfoil'):
+
+    rodPos = [2.0*chord, 0.0, 0.0]
+    rodR = 0.1*chord
+    rodElemSize = 0.01*chord/(gridPts_alongNACA/75.0)
+    rodBLwidth = 0.05*chord
+
+    gridPts_alongRod = int(2*np.pi*rodR/rodElemSize/4)
+    gridPts_inRodBL = int(10*gridPts_alongNACA/75.0)
+    gridGeomProg_inRodBL = 1.1
+
+    structTag = [pointTag, lineTag, surfaceTag]
+    RodGeomSpec = [rodPos, rodR, rodBLwidth]
+    RodGridPtsSpec = [gridPts_alongRod, gridPts_inRodBL, gridGeomProg_inRodBL]
+    [pTL_rod, lTL_rod, sTL_rod, pointTag, lineTag, surfaceTag] = gmeshed_disk(structTag, RodGeomSpec, RodGridPtsSpec, rotMat, shiftVec) # works for high-order
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Creation of the exterior region # #
@@ -101,30 +117,38 @@ y_maxINF = 20.0*chord
 elemSize_rectINF = np.min([50*elemSize_rect, int((y_maxINF-y_minINF)/5.0)])
 
 
-rotMat = rotationMatrix([0.0, 0.0, 0.0]) # angles in degree around [axisZ, axisY, axisX]
-shiftVec = np.array([0.0, 0.0, 0.0]) # shift of the origin
-
 [ rectLine, pointTag, lineTag] = gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec)
 [ rectLineBUFF, pointTag, lineTag] = gmeshed_rectangle_contour(x_minBUFF, x_maxBUFF, y_minBUFF, y_maxBUFF, elemSize_rectBUFF, pointTag, lineTag, rotMat, shiftVec)
 [ rectLineINF, pointTag, lineTag] = gmeshed_rectangle_contour(x_minINF, x_maxINF, y_minINF, y_maxINF, elemSize_rectINF, pointTag, lineTag, rotMat, shiftVec)
 
-gmsh.model.geo.add_curve_loop( [*rectLine, *structBLouterLine], surfaceTag+1) 
+lRodConn = 0
+lRodArc = 1
+lRodBL = 2
+
+if CONF == 'rodAirfoil':
+    unstructCFD_curve = [*rectLine, *bladeLine, *lTL_rod[lRodBL]]
+elif CONF == 'airfoil':
+    unstructCFD_curve = [*rectLine, *bladeLine]
+elif CONF == 'rod':
+    unstructCFD_curve = [*rectLine, *lTL_rod[lRodBL]]
+
+gmsh.model.geo.add_curve_loop(unstructCFD_curve, surfaceTag+1) 
 gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
 gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
 surfaceTag = surfaceTag+1
-surf_unstr = surfaceTag
+surf_unstructCFD = surfaceTag
 
 gmsh.model.geo.add_curve_loop( [*rectLine, *rectLineBUFF], surfaceTag+1) 
 gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
 gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
 surfaceTag = surfaceTag+1
-surf_unstrBUFF = surfaceTag
+surf_unstructBUFF = surfaceTag
 
 gmsh.model.geo.add_curve_loop( [*rectLineBUFF, *rectLineINF], surfaceTag+1) 
 gmsh.model.geo.addPlaneSurface([surfaceTag+1], surfaceTag+1) # mesh inside the airfoil
 gmsh.model.geo.mesh.setRecombine(pb_2Dim, surfaceTag+1) # To create quadrangles instead of triangles
 surfaceTag = surfaceTag+1
-surf_unstrINF = surfaceTag
+surf_unstructINF = surfaceTag
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Generate visualise and export the mesh # #
@@ -166,14 +190,31 @@ gmsh.model.mesh.generate(2)
 
 # Create the relevant Gmsh data structures from Gmsh model.
 gmsh.model.geo.synchronize()
+[nodePerEntity, elemPerEntity] = countDOF()
+# gmsh.model.setColor([(2, 3)], 255, 0, 0)  # Red
 
-gmsh.model.addPhysicalGroup(pb_2Dim, [*structGridSurf, surf_unstr], 1, "CFD")
-gmsh.model.addPhysicalGroup(pb_2Dim, [surf_unstrBUFF, surf_unstrINF], 2, "Buff")
+if CONF == 'rodAirfoil':
+    surf_unstructConf = [*structGridSurf, *sTL_rod, surf_unstructCFD]
+elif CONF == 'airfoil':
+    surf_unstructConf = [*structGridSurf, surf_unstructCFD]
+elif CONF == 'rod':
+    surf_unstructConf = [*sTL_rod, surf_unstructCFD]
 
-gmsh.model.addPhysicalGroup(pb_1Dim, [*airfoilLine], 5, "airfoil skin")
-gmsh.model.addPhysicalGroup(pb_1Dim, [*rectLine], 6, "regular CAA frontier")
+gmsh.model.addPhysicalGroup(pb_2Dim, [*surf_unstructConf], 1, "CFD")
+gmsh.model.addPhysicalGroup(pb_2Dim, [surf_unstructBUFF, surf_unstructINF], 2, "Buff")
 
-# gmsh.model.addPhysicalGroup(pb_1Dim, [*rectLineBUFF], 5, "BUFF outer contour")
+# export volume mesh only for visualisation:
+if CONF == 'rod':
+    gmsh.write("2D_rod_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".vtk")
+else:
+    gmsh.write("2D_"+CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".vtk")
+
+if not (CONF == 'airfoil'):
+    gmsh.model.addPhysicalGroup(pb_1Dim, [*lTL_rod[lRodArc]], 4, "Rod Hard Wall")
+if not (CONF == 'rod'):
+    gmsh.model.addPhysicalGroup(pb_1Dim, [*airfoilLine], 5, "Airfoil Hard Wall")
+
+gmsh.model.addPhysicalGroup(pb_1Dim, [*rectLine], 6, "BUFF inner Wrap")
 
 ExtrudUnstruct_bottom = rectLineINF[0]
 ExtrudUnstruct_outlet = rectLineINF[1]
@@ -186,52 +227,60 @@ gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstruct_outlet], 8, "Outlet BC")
 gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstruct_bottom], 9, "Bottom BC")
 gmsh.model.addPhysicalGroup(pb_1Dim, [ExtrudUnstruct_top], 10, "Top BC")
 
-# gmsh.model.setColor([(2, 3)], 255, 0, 0)  # Red
-
-[nodePerEntity, elemPerEntity] = countDOF()
-
 # Write mesh data:
 gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is selected "Mesh.SaveAll=1" discards the group definitions (to be avoided!).
 
-gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".msh")
-gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".vtk")
-# paraview support for High-order meshes: https://www.kitware.com/high-order-using-gmsh-reader-plugin-in-paraview/
+# export mesh with all tags for computation:
+if CONF == 'rod':
+    gmsh.write("2D_rod_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".msh")
+else:
+    gmsh.write("2D_"+CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".msh")
+
+# export surfaces where the solution will be later interpolated.
+gmsh.model.removePhysicalGroups()
+if not (CONF == 'airfoil'):
+    gmsh.model.addPhysicalGroup(pb_1Dim, [*lTL_rod[lRodArc]], 1, "Rod Hard Wall")
+    gmsh.write("2D_"+CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+"_rodSurf.msh")
 
 gmsh.model.removePhysicalGroups()
-gmsh.model.addPhysicalGroup(pb_1Dim, [*airfoilLine], 1, "Airfoil Hard Wall")
-gmsh.write("NACA"+NACA_type+"_foil_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+"_airfoilSurf.msh")
+if not (CONF == 'rod'):
+    gmsh.model.addPhysicalGroup(pb_1Dim, [*airfoilLine], 1, "Airfoil Hard Wall")
+    gmsh.write("2D_"+CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+"_airfoilSurf.msh")
+
+# paraview support for High-order meshes: https://www.kitware.com/high-order-using-gmsh-reader-plugin-in-paraview/
 
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # # Calculate the first cell size # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-### Computation of the 1st cell height
-if (gridGeomProg_inBL==1):
-    height_firstCell_LE = height_LE/gridPts_inBL
-    height_firstCell_TE = height_TE/gridPts_inBL
-else:
-    #  h_{i+1} = h_i*gridGeomProg_inBL
-    #  H_tot = Sum(h_i)_{i=1..gridPts_inBL} = firstCell * (1-gridGeomProg_inBL^gridPts_inBL)/(1-gridGeomProg_inBL)
-    height_firstCell_LE = height_LE*(1-gridGeomProg_inBL)/(1-gridGeomProg_inBL**gridPts_inBL)
-    height_firstCell_TE = height_TE*(1-gridGeomProg_inBL)/(1-gridGeomProg_inBL**gridPts_inBL)
-print("Quality : 1st cell size @LE = "+ '{:.2e}'.format(height_firstCell_LE/chord)+" * chord")
-print("Quality : 1st cell size @TE = "+ '{:.2e}'.format(height_firstCell_TE/chord)+" * chord")
+if not (CONF == 'rod'):
+    ### Computation of the 1st cell height
+    if (gridGeomProg_inBL==1):
+        height_firstCell_LE = height_LE/gridPts_inBL
+        height_firstCell_TE = height_TE/gridPts_inBL
+    else:
+        #  h_{i+1} = h_i*gridGeomProg_inBL
+        #  H_tot = Sum(h_i)_{i=1..gridPts_inBL} = firstCell * (1-gridGeomProg_inBL^gridPts_inBL)/(1-gridGeomProg_inBL)
+        height_firstCell_LE = height_LE*(1-gridGeomProg_inBL)/(1-gridGeomProg_inBL**gridPts_inBL)
+        height_firstCell_TE = height_TE*(1-gridGeomProg_inBL)/(1-gridGeomProg_inBL**gridPts_inBL)
+    print("Quality : 1st cell size @LE = "+ '{:.2e}'.format(height_firstCell_LE/chord)+" * chord")
+    print("Quality : 1st cell size @TE = "+ '{:.2e}'.format(height_firstCell_TE/chord)+" * chord")
 
-### Computation of the NACA profile length (suction side)
-# arc length L of a function y=f(x) for x=a..b is L = int_{x=a..b} sqrt(1+ (df(x)/dx)^2) dx 
-# the coordinates are accessed through the api intsead: https://bthierry.pages.math.cnrs.fr/tutorial/gmsh/api/detail/
-suctionLine_PG_tag = 99
-gmsh.model.addPhysicalGroup(pb_1Dim, [*airfoilLineSuction], suctionLine_PG_tag, "airfoil suction line")
-line_airfoilUp_coord = gmsh.model.mesh.getNodesForPhysicalGroup(1, suctionLine_PG_tag)[1]
-line_airfoilUp_coord = line_airfoilUp_coord.reshape(elemOrder*(gridPts_alongNACA-1)+1,3)
-line_airfoilUp_coord = line_airfoilUp_coord[line_airfoilUp_coord[:,0].argsort()] # sorting by chordwise coordinates https://stackoverflow.com/questions/2828059/sorting-arrays-in-numpy-by-column
-suctionSideArcLength = 0
-for i in range(0, np.shape(line_airfoilUp_coord)[0]-1):
-    suctionSideArcLength = suctionSideArcLength + np.sqrt( (line_airfoilUp_coord[i+1,0]-line_airfoilUp_coord[i,0])**2 + (line_airfoilUp_coord[i+1,1]-line_airfoilUp_coord[i,1])**2)
-# from matplotlib import pyplot as plt
-# plt.plot(line_airfoilUp_coord[:,0],line_airfoilUp_coord[:,1],'-+')
-# plt.show()
-print("Quality : cell size along chord = "+ '{:.2e}'.format(suctionSideArcLength/((gridPts_alongNACA-1)*chord))+ " * chord")
+    ### Computation of the NACA profile length (suction side)
+    # arc length L of a function y=f(x) for x=a..b is L = int_{x=a..b} sqrt(1+ (df(x)/dx)^2) dx 
+    # the coordinates are accessed through the api intsead: https://bthierry.pages.math.cnrs.fr/tutorial/gmsh/api/detail/
+    suctionLine_PG_tag = 99
+    gmsh.model.addPhysicalGroup(pb_1Dim, [*airfoilLineSuction], suctionLine_PG_tag, "airfoil suction line")
+    line_airfoilUp_coord = gmsh.model.mesh.getNodesForPhysicalGroup(1, suctionLine_PG_tag)[1]
+    line_airfoilUp_coord = line_airfoilUp_coord.reshape(elemOrder*(gridPts_alongNACA-1)+1,3)
+    line_airfoilUp_coord = line_airfoilUp_coord[line_airfoilUp_coord[:,0].argsort()] # sorting by chordwise coordinates https://stackoverflow.com/questions/2828059/sorting-arrays-in-numpy-by-column
+    suctionSideArcLength = 0
+    for i in range(0, np.shape(line_airfoilUp_coord)[0]-1):
+        suctionSideArcLength = suctionSideArcLength + np.sqrt( (line_airfoilUp_coord[i+1,0]-line_airfoilUp_coord[i,0])**2 + (line_airfoilUp_coord[i+1,1]-line_airfoilUp_coord[i,1])**2)
+    # from matplotlib import pyplot as plt
+    # plt.plot(line_airfoilUp_coord[:,0],line_airfoilUp_coord[:,1],'-+')
+    # plt.show()
+    print("Quality : cell size along chord = "+ '{:.2e}'.format(suctionSideArcLength/((gridPts_alongNACA-1)*chord))+ " * chord")
 
 
 # delete the "__pycache__" folder:
