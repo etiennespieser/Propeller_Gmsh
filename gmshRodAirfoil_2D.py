@@ -205,7 +205,7 @@ gmsh.model.addPhysicalGroup(pb_2Dim, [surf_unstructBUFF, surf_unstructINF], 2, "
 
 # export volume mesh only for visualisation:
 if CONF == 'rod':
-    gmsh.write("2D_rod_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".vtk")
+    gmsh.write("2D_rod_"+str(sum(elemPerEntity))+"elems_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".vtk")
 else:
     gmsh.write("2D_"+CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".vtk")
 
@@ -232,7 +232,7 @@ gmsh.option.setNumber("Mesh.MshFileVersion", 2.2) # when ASCII format 2.2 is sel
 
 # export mesh with all tags for computation:
 if CONF == 'rod':
-    gmsh.write("2D_rod_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".msh")
+    gmsh.write("2D_rod_"+str(sum(elemPerEntity))+"elems_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".msh")
 else:
     gmsh.write("2D_"+CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+".msh")
 
@@ -240,7 +240,7 @@ else:
 gmsh.model.removePhysicalGroups()
 if not (CONF == 'airfoil'):
     gmsh.model.addPhysicalGroup(pb_1Dim, [*lTL_rod[lRodArc]], 1, "Rod Hard Wall")
-    gmsh.write("2D_"+CONF+"_NACA"+NACA_type+"_"+str(sum(elemPerEntity))+"elems_"+str(int(pitch))+"degAoA_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+"_rodSurf.msh")
+    gmsh.write("2D_rod_"+str(sum(elemPerEntity))+"elems_chordPts"+str(gridPts_alongNACA)+"_mo"+str(elemOrder)+"_rodSurf.msh")
 
 gmsh.model.removePhysicalGroups()
 if not (CONF == 'rod'):
