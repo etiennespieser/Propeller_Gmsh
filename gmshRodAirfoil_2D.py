@@ -15,7 +15,7 @@ bluntTrailingEdge = True
 
 gridPts_alongNACA = 50 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
                        # Other parameters scale with this one. 
-elemOrder = 3 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
+elemOrder = 3 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759, 10 is the max order supported by Gmsh
 highOrderBLoptim = 4 # 0: none,
                      # 1: optimization, 
                      # 2: elastic+optimization, 
@@ -80,14 +80,14 @@ if not (CONF == 'rod'):
 
 if not (CONF == 'airfoil'):
 
-    rodPos = [2.0*chord, 0.0, 0.0]
-    rodR = 0.1*chord
-    rodElemSize = 0.01*chord/(gridPts_alongNACA/75.0)
-    rodBLwidth = 0.05*chord
+    rodPos = [0.0, 0.0, 0.0]
+    rodR = 0.05*chord
+    rodElemSize = 0.005*chord/(gridPts_alongNACA/75.0)
+    rodBLwidth = 0.1*chord
 
     gridPts_alongRod = int(2*np.pi*rodR/rodElemSize/4)
-    gridPts_inRodBL = int(10*gridPts_alongNACA/75.0)
-    gridGeomProg_inRodBL = 1.1
+    gridPts_inRodBL = int(20*gridPts_alongNACA/75.0)
+    gridGeomProg_inRodBL = 1.15
 
     structTag = [pointTag, lineTag, surfaceTag]
     RodGeomSpec = [rodPos, rodR, rodBLwidth]
@@ -99,22 +99,22 @@ if not (CONF == 'airfoil'):
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 x_min = - 1.5*chord
-x_max = 3*chord
+x_max = 1.5*chord
 y_min = - 1.5*chord
 y_max = 1.5*chord
 elemSize_rect = chord/20/(gridPts_alongNACA/75.0)
 
-x_minBUFF = - 1.75*chord
-x_maxBUFF = 7*chord
-y_minBUFF = - 1.75*chord
-y_maxBUFF = 1.75*chord
+x_minBUFF = - 2.0*chord
+x_maxBUFF = 2.0*chord
+y_minBUFF = - 2.0*chord
+y_maxBUFF = 2.0*chord
 elemSize_rectBUFF = elemSize_rect
 
 x_minINF = - 20.0*chord
-x_maxINF = 30.0*chord
+x_maxINF = 20.0*chord
 y_minINF = - 20.0*chord
 y_maxINF = 20.0*chord
-elemSize_rectINF = np.min([50*elemSize_rect, int((y_maxINF-y_minINF)/5.0)])
+elemSize_rectINF = np.min([50*elemSize_rect, (y_maxINF-y_minINF)/5.0])
 
 
 [ rectLine, pointTag, lineTag] = gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec)
