@@ -35,7 +35,7 @@ gridPts_alongWake = int(30*gridPts_alongNACA/75.0) # > 2 for split into fully he
 gridGeomProg_alongWake = 1.0
 
 pitch = 12.0 # deg
-chord = 0.2 # m 
+chord = 20.0 # m 
 
 # Initialize gmsh:
 gmsh.initialize()
@@ -83,10 +83,10 @@ if not (CONF == 'airfoil'):
     rodPos = [0.0, 0.0, 0.0]
     rodR = 0.05*chord
     rodElemSize = 0.005*chord/(gridPts_alongNACA/75.0)
-    rodBLwidth = 0.1*chord
+    rodBLwidth = 0.2*chord
 
     gridPts_alongRod = int(2*np.pi*rodR/rodElemSize/4)
-    gridPts_inRodBL = int(20*gridPts_alongNACA/75.0)
+    gridPts_inRodBL = int(30*gridPts_alongNACA/75.0)
     gridGeomProg_inRodBL = 1.15
 
     structTag = [pointTag, lineTag, surfaceTag]
