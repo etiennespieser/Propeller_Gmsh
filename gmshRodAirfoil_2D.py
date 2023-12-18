@@ -15,7 +15,7 @@ bluntTrailingEdge = True
 
 gridPts_alongNACA = 50 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
                        # Other parameters scale with this one. 
-elemOrder = 3 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759, 10 is the max order supported by Gmsh
+elemOrder = 8 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759, 10 is the max order supported by Gmsh
 highOrderBLoptim = 4 # 0: none,
                      # 1: optimization, 
                      # 2: elastic+optimization, 
@@ -85,9 +85,9 @@ if not (CONF == 'airfoil'):
     rodElemSize = 0.005*chord/(gridPts_alongNACA/75.0)
     rodBLwidth = 0.2*chord
 
-    gridPts_alongRod = int(2*np.pi*rodR/rodElemSize/4)
-    gridPts_inRodBL = int(30*gridPts_alongNACA/75.0)
-    gridGeomProg_inRodBL = 1.15
+    gridPts_alongRod = int(8*np.pi*rodR/rodElemSize/4)
+    gridPts_inRodBL = int(70*gridPts_alongNACA/75.0)
+    gridGeomProg_inRodBL = 1.1
 
     structTag = [pointTag, lineTag, surfaceTag]
     RodGeomSpec = [rodPos, rodR, rodBLwidth]
