@@ -13,9 +13,9 @@ CONF = 'rod' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = True
 
-gridPts_alongNACA = 50 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
+gridPts_alongNACA = 11 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
                        # Other parameters scale with this one. 
-elemOrder = 3 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759, 10 is the max order supported by Gmsh
+elemOrder = 2 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759, 10 is the max order supported by Gmsh
 highOrderBLoptim = 4 # 0: none,
                      # 1: optimization, 
                      # 2: elastic+optimization, 
@@ -23,7 +23,7 @@ highOrderBLoptim = 4 # 0: none,
                      # 4: fast curving
                      # by default choose 4. If for small "gridPts_alongNACA", LE curvature fails, try other values.  
                      
-gridPts_inBL = int(15*gridPts_alongNACA/75.0) # > 2 for split into fully hex mesh
+gridPts_inBL = int(0.3*gridPts_alongNACA) # > 2 for split into fully hex mesh
 gridGeomProg_inBL = 1.15
 
 TEpatchGridFlaringAngle = 30 # deg
@@ -83,11 +83,11 @@ if not (CONF == 'airfoil'):
     rodPos = [0.0, 0.0, 0.0]
     rodR = 0.05*chord
     rodElemSize = 0.005*chord/(gridPts_alongNACA/75.0)
-    rodBLwidth = 0.2*chord
+    rodBLwidth = 4*rodR
 
-    gridPts_alongRod = int(2*np.pi*rodR/rodElemSize/4)
-    gridPts_inRodBL = int(30*gridPts_alongNACA/75.0)
-    gridGeomProg_inRodBL = 1.15
+    gridPts_alongRod = int(8*np.pi*rodR/rodElemSize/4)
+    gridPts_inRodBL = int(70*gridPts_alongNACA/75.0)
+    gridGeomProg_inRodBL = 1.1
 
     structTag = [pointTag, lineTag, surfaceTag]
     RodGeomSpec = [rodPos, rodR, rodBLwidth]
@@ -114,7 +114,7 @@ x_minINF = - 20.0*chord
 x_maxINF = 20.0*chord
 y_minINF = - 20.0*chord
 y_maxINF = 20.0*chord
-elemSize_rectINF = np.min([50*elemSize_rect, (y_maxINF-y_minINF)/5.0])
+elemSize_rectINF = np.min([50*elemSize_rect, (y_maxINF-y_minINF)/gridPts_alongNACA])
 
 
 [ rectLine, pointTag, lineTag] = gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec)
