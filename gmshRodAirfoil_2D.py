@@ -9,11 +9,11 @@ from gmshToolkit import *
 import shutil 
 
 NACA_type = '0012'
-CONF = 'rod' # airfoil, rod, rodAirfoil
+CONF = 'rodAirfoil' # airfoil, rod, rodAirfoil
 
-bluntTrailingEdge = True
+bluntTrailingEdge = False
 
-gridPts_alongNACA = 11 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
+gridPts_alongNACA = 30 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
                        # Other parameters scale with this one. 
 elemOrder = 2 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759, 10 is the max order supported by Gmsh
 highOrderBLoptim = 4 # 0: none,
@@ -80,13 +80,13 @@ if not (CONF == 'rod'):
 
 if not (CONF == 'airfoil'):
 
-    rodPos = [0.0, 0.0, 0.0]
+    rodPos = [-1.5*chord, 0.0, 0.0]
     rodR = 0.05*chord
-    rodElemSize = 0.005*chord/(gridPts_alongNACA/75.0)
+    rodElemSize = 0.01*chord/(gridPts_alongNACA/75.0)
     rodBLwidth = 4*rodR
 
-    gridPts_alongRod = int(8*np.pi*rodR/rodElemSize/4)
-    gridPts_inRodBL = int(70*gridPts_alongNACA/75.0)
+    gridPts_alongRod = int(np.pi*rodR/rodElemSize)
+    gridPts_inRodBL = int(gridPts_alongNACA/2.0)
     gridGeomProg_inRodBL = 1.1
 
     structTag = [pointTag, lineTag, surfaceTag]
@@ -98,22 +98,22 @@ if not (CONF == 'airfoil'):
 # # Creation of the exterior region # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-x_min = - 1.5*chord
-x_max = 1.5*chord
+x_min = - 2.5*chord
+x_max = 4*chord
 y_min = - 1.5*chord
 y_max = 1.5*chord
 elemSize_rect = chord/20/(gridPts_alongNACA/75.0)
 
-x_minBUFF = - 2.0*chord
-x_maxBUFF = 2.0*chord
+x_minBUFF = - 3.0*chord
+x_maxBUFF = 8.0*chord
 y_minBUFF = - 2.0*chord
 y_maxBUFF = 2.0*chord
 elemSize_rectBUFF = elemSize_rect
 
-x_minINF = - 20.0*chord
-x_maxINF = 20.0*chord
-y_minINF = - 20.0*chord
-y_maxINF = 20.0*chord
+x_minINF = - 10.0*chord
+x_maxINF = 15.0*chord
+y_minINF = - 10.0*chord
+y_maxINF = 10.0*chord
 elemSize_rectINF = np.min([50*elemSize_rect, (y_maxINF-y_minINF)/gridPts_alongNACA])
 
 
