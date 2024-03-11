@@ -35,7 +35,7 @@ gridPts_alongWake = int(30*gridPts_alongNACA/75.0) # > 2 for split into fully he
 gridGeomProg_alongWake = 1.0
 
 pitch = 12.0 # deg
-chord = 20.0 # m 
+chord = 0.2 # m 
 
 # Initialize gmsh:
 gmsh.initialize()
