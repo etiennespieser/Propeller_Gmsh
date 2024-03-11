@@ -62,7 +62,7 @@ if not (CONF == 'rod'):
     gridPts_inTE = int(gridPts_inBL/7) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
 
     airfoilReferenceAlongChord = 0.5*chord
-    airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
+    airfoilReferenceCoordinate = [-1.5*chord, 0.0, 0.0]
 
     structTag = [pointTag, lineTag, surfaceTag]
     GeomSpec = [NACA_type, bluntTrailingEdge, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
@@ -80,7 +80,7 @@ if not (CONF == 'rod'):
 
 if not (CONF == 'airfoil'):
 
-    rodPos = [-1.5*chord, 0.0, 0.0]
+    rodPos = [0.0, 0.0, 0.0]
     rodR = 0.05*chord
     rodElemSize = 0.01*chord/(gridPts_alongNACA/75.0)
     rodBLwidth = 4*rodR
@@ -98,14 +98,14 @@ if not (CONF == 'airfoil'):
 # # Creation of the exterior region # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-x_min = - 2.5*chord
-x_max = 4*chord
+x_min = - 1.0*chord
+x_max = 5.5*chord
 y_min = - 1.5*chord
 y_max = 1.5*chord
 elemSize_rect = chord/20/(gridPts_alongNACA/75.0)
 
-x_minBUFF = - 3.0*chord
-x_maxBUFF = 8.0*chord
+x_minBUFF = - 1.5*chord
+x_maxBUFF = 9.5*chord
 y_minBUFF = - 2.0*chord
 y_maxBUFF = 2.0*chord
 elemSize_rectBUFF = elemSize_rect
@@ -167,7 +167,7 @@ gmsh.option.setNumber("Mesh.SecondOrderLinear", 0)
 gmsh.option.setNumber("Mesh.HighOrderOptimize", highOrderBLoptim) # NB: Where straight layers in BL are satisfactory, use addPlaneSurface() instead of addSurfaceFilling() and remove this high-order optimisation.
 gmsh.option.setNumber("Mesh.NumSubEdges", elemOrder) # just visualisation ??
 
-gmsh.model.mesh.generate(2)
+gmsh.model.mesh.generate()
 
 # generating a high quality fully hex mesh is a tall order: 
 # https://gitlab.onelab.info/gmsh/gmsh/-/issues/784
