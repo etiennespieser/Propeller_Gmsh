@@ -9,13 +9,13 @@ from gmshToolkit import *
 import shutil
 
 NACA_type = '0012'
-CONF = 'airfoil' # airfoil, rod, rodAirfoil
+CONF = 'rodAirfoil' # airfoil, rod, rodAirfoil
 
 bluntTrailingEdge = False
 
-gridPts_alongNACA = 50 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
+gridPts_alongNACA = 30 # "gridPts_alongNACA" pts makes "gridPts_alongNACA-1" elements
                        # Other parameters scale with this one. 
-elemOrder = 3 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
+elemOrder = 2 # 8 is max order supported my navier_mfem: github.com/mfem/mfem/issues/3759
 highOrderBLoptim = 4 # 0: none,
                      # 1: optimization, 
                      # 2: elastic+optimization, 
@@ -65,7 +65,7 @@ if not (CONF == 'rod'):
     gridPts_inTE = int(gridPts_inBL/7) # if the TE is blunt, number of cells in the TE half height. NB: for the Blossom algorithm to work an even number of faces must be given.
 
     airfoilReferenceAlongChord = 0.5*chord
-    airfoilReferenceCoordinate = [0.0, 0.0, 0.0]
+    airfoilReferenceCoordinate = [-1.5*chord, 0.0, 0.0]
 
     structTag = [pointTag, lineTag, surfaceTag]
     GeomSpec = [NACA_type, bluntTrailingEdge, pitch, chord, airfoilReferenceAlongChord, airfoilReferenceCoordinate, height_LE, height_TE, TEpatchLength, TEpatchGridFlaringAngle, wakeLength, wakeGridFlaringAngle]
@@ -82,7 +82,7 @@ if not (CONF == 'rod'):
 
 if not (CONF == 'airfoil'):
 
-    rodPos = [2.0*chord, 0.0, 0.0]
+    rodPos = [0.0, 0.0, 0.0]
     rodR = 0.1*chord
     rodElemSize = 0.01*chord/(gridPts_alongNACA/75.0)
     rodBLwidth = 0.05*chord
@@ -100,23 +100,23 @@ if not (CONF == 'airfoil'):
 # # Creation of the exterior region # #
 # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-x_min = - 1.5*chord
-x_max = 3*chord
+x_min = - 1.0*chord
+x_max = 5.5*chord
 y_min = - 1.5*chord
 y_max = 1.5*chord
 elemSize_rect = chord/20/(gridPts_alongNACA/75.0)
 
-x_minBUFF = - 1.75*chord
-x_maxBUFF = 7*chord
-y_minBUFF = - 1.75*chord
-y_maxBUFF = 1.75*chord
+x_minBUFF = - 1.5*chord
+x_maxBUFF = 9.5*chord
+y_minBUFF = - 2.0*chord
+y_maxBUFF = 2.0*chord
 elemSize_rectBUFF = elemSize_rect
 
-x_minINF = - 20.0*chord
-x_maxINF = 30.0*chord
-y_minINF = - 20.0*chord
-y_maxINF = 20.0*chord
-elemSize_rectINF = np.min([50*elemSize_rect, int((y_maxINF-y_minINF)/5.0)])
+x_minINF = - 10.0*chord
+x_maxINF = 15.0*chord
+y_minINF = - 10.0*chord
+y_maxINF = 10.0*chord
+elemSize_rectINF = np.min([50*elemSize_rect, (y_maxINF-y_minINF)/gridPts_alongNACA])
 
 [rectLine, pointTag, lineTag] = gmeshed_rectangle_contour(x_min, x_max, y_min, y_max, elemSize_rect, pointTag, lineTag, rotMat, shiftVec)
 [rectLineBUFF, pointTag, lineTag] = gmeshed_rectangle_contour(x_minBUFF, x_maxBUFF, y_minBUFF, y_maxBUFF, elemSize_rectBUFF, pointTag, lineTag, rotMat, shiftVec)
