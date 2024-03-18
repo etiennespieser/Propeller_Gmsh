@@ -6,7 +6,7 @@
 import sys
 import gmsh
 from gmshToolkit import *
-import shutil 
+import shutil
 
 NACA_type = '0012'
 CONF = 'rodAirfoil' # airfoil, rod, rodAirfoil

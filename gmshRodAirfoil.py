@@ -83,9 +83,9 @@ if not (CONF == 'rod'):
 if not (CONF == 'airfoil'):
 
     rodPos = [0.0, 0.0, 0.0]
-    rodR = 0.1*chord
+    rodR = 0.05*chord
     rodElemSize = 0.01*chord/(gridPts_alongNACA/75.0)
-    rodBLwidth = 0.05*chord
+    rodBLwidth = 4*rodR
 
     gridPts_alongRod = int(2*np.pi*rodR/rodElemSize/4)
     gridPts_inRodBL = int(10*gridPts_alongNACA/75.0)
