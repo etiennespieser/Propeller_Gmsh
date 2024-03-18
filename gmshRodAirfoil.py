@@ -87,8 +87,8 @@ if not (CONF == 'airfoil'):
     rodElemSize = 0.01*chord/(gridPts_alongNACA/75.0)
     rodBLwidth = 4*rodR
 
-    gridPts_alongRod = int(2*np.pi*rodR/rodElemSize/4)
-    gridPts_inRodBL = int(10*gridPts_alongNACA/75.0)
+    gridPts_alongRod = int(np.pi*rodR/rodElemSize)
+    gridPts_inRodBL = int(gridPts_alongNACA/2.0)
     gridGeomProg_inRodBL = 1.1
 
     structTag = [pointTag, lineTag, surfaceTag]
