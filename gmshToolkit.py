@@ -3608,8 +3608,8 @@ def extrude_rodBL(sTL_rod, span, gridPts_alongSpan):
     for i in range(len(ExtrudRodBL)):
         if ExtrudRodBL[i][0] == 3:  
             ExtrudRodBL_symFace.append(ExtrudRodBL[i-1][1]) # Rod BL extruded periodic face
-            ExtrudRodBL_skin.append(ExtrudRodBL[i+2][1]) # Rod cylinder skin
-            # ExtrudRodBL_rodBLouterSkin.append(ExtrudRodBL[i+4][1]) # Rod BL connection to unstruct CFD mesh
+            ExtrudRodBL_skin.append(ExtrudRodBL[i+4][1]) # Rod cylinder skin 
+            # ExtrudRodBL_rodBLouterSkin.append(ExtrudRodBL[i+2][1]) # Rod BL connection to unstruct CFD mesh
 
     return ExtrudRodBL_vol, ExtrudRodBL_symFace, ExtrudRodBL_skin
 
